@@ -1,0 +1,77 @@
+---
+title: "PH Kruskal Wallis"
+author: "Diana Laura Reyes Youshimatz 173391"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Ejercicio 1
+Los empleados que contrata la empresa Williams Manufacturings para su departamento administrativo provienen de tres universidades. Recién el departamento de personal de la empresa ha empezado a revisar el desempeño anual para determinar si hay diferencia en el desempeño de los empleados provenientes de estas tres universidades. Se cuenta con los datos de muestras independientes de clasificación de acuerdo con su desempeño de siete empleados provenientes de la universidad A, seis de la universidad B y siete de la universidad C. Suponga que se desea probar si las tres poblaciones son idénticas respecto a las calificaciones por su desempeño. Use un nivel de significancia de 0.05.
+
+$H_0:\mu_1 = \mu_2 = \mu_3 \quad vs \quad H_a:\text{al menos una es diferente}$
+
+```{r}
+A <-c(25, 70, 60, 85, 95, 90, 80)
+B <-c(60, 20, 30, 15, 40, 35)
+C <- c(50, 70, 60, 80, 90, 70, 75)
+k<-kruskal.test(list(A,B,C))
+k
+
+#install.packages("PMCMRplus")
+library(PMCMRplus)
+kwAllPairsDunnTest(list(A,B,C),p.adjust.method= "none")
+kwAllPairsDunnTest(list(A,B,C),p.adjust.method= "holm")
+kwAllPairsDunnTest(list(A,B,C),p.adjust.method= "bonferroni")
+
+```
+
+Conclusión: Al obtener en la prueba Kruskal-Wallis rank sum test un p-value < 0.05, podemos rechazar la hipótesis nula y en el las pruebas de ajuste, existe evidencia suficiente para decir que hay una diferencia significativa en el desempeño de la universidad B, pues su media de desempeño es diferente al compararla con la universidad A (0.017) y la universidad C (0.028)
+
+# Ejercicio 2
+En un experimento para determinar cuál de tres diferentes sistemas de misiles es preferible, se mide la tasa de combustión del propulsor. Los datos, después de codificarlos, se presentan en la tabla. Utilice la prueba de Kruskal-Wallis y un nivel de significancia de 0.05 para probar la hipótesis de que las tasas de combustión del propulsor son iguales para los tres sistemas de misiles
+
+$H_0:\mu_1 = \mu_2 = \mu_3 \quad vs \quad H_a:\text{al menos una es diferente}$
+
+```{r}
+A <-c(24, 19.8, 16.7, 22.8, 18.9)
+B <-c(23.2, 17.6, 19.8, 20.2, 18.1, 17.82)
+C <- c(18.4, 17.3, 18.8, 19.1, 19.7, 19.3, 17.3, 18.9)
+k<-kruskal.test(list(A,B,C))
+k
+```
+Conclusión: dado que en la prueba Kruskal-Wallis rank sum test el pvalor no es menor a 0.05, no es significativo y, no podemos rechazar la hipótesis nula y por tanto, no existe evidencia para decir que las tasas de propulsión son diferentes.
+
+# Ejercicio 3 
+Se dan las calificaciones del examen de aprovechamiento para cuatro diferentes grupos de estudiantes, donde cada grupo recibió enseñanza mediante una técnica diferente. El objetivo del
+experimento es probar la hipótesis de que no hay diferencia, en las distribuciones poblacionales de las calificaciones del examen de aprovechamiento, contra la alternativa de que difieren en ubicación. Use un nivel de significancia de 0.05.
+
+$H_0:\mu_1 = \mu_2 = \mu_3 = \mu_4 \quad vs \quad H_a:\text{al menos una es diferente}$
+
+```{r}
+A <-c(65, 87, 73, 79, 81, 69)
+B <-c(75, 69, 83, 81, 72, 79, 90)
+C <- c( 59, 78, 67, 62, 83, 76)
+D <- c(94, 89, 80, 88)
+k<-kruskal.test(list(A,B,C,D))
+k
+
+library(PMCMRplus)
+kwAllPairsDunnTest(list(A,B,C,D),p.adjust.method= "none")
+kwAllPairsDunnTest(list(A,B,C,D),p.adjust.method= "holm")
+kwAllPairsDunnTest(list(A,B,C,D),p.adjust.method= "bonferroni")
+
+```
+
+Dado que en la prueba Kruskal-Wallis rank sum test, el p-valor es >0.05, pero es muy cercano, también realizamos la prueba de comparación de pares, donde podemos observar que la media de las distribución poblacionales del grupo 4 difiere, especialmente cuando se compara con el grupo 3. Por tanto, existe evidencia para afirmar que las distribuciones poblacionales del examen de aprovechamiento difieren.
+
+# Ejercicio 4 
+El Hospital System of the Carolinas opera tres hospitales en el área de Great Charlotte: St. Lukes Memorial, en el lado poniente de la ciudad, Swedish Medical Center, al Sur, y el Piedmont Hospital en el lado Este. El director de administración está preocupado acerca del tiempo de espera de los pacientes con lesiones de tipo deportivo, que no ponen en peligro la vida, y que llegan durante las tardes entre semana a los tres hospitales. Específicamente, existe una diferencia en los tiempos de espera en los tres hospitales? Use un nivel de significancia de 0.05
+```{r}
+A <-c(56, 39, 48, 38, 73, 60, 62)
+B <-c(103, 87, 51, 95, 68, 42, 107, 89)
+C <- c(42, 38, 89, 75, 35, 61)
+k<-kruskal.test(list(A,B,C))
+k
+
+```
+Dado que en la prueba Kruskal-Wallis rank sum test, el p valor > 0.05 no es signicante, por tanto no existe evidencia para afirmar que existe una evidencia en los tiempos de espera en los tres hospitales. 

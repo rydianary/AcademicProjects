@@ -1,0 +1,350 @@
+---
+title: "EjerciciosAnova2v"
+author: "Diana Laura Reyes Youshimatz 173391"
+date: "`r Sys.Date()`"
+output: html_document
+---
+Del ejercicio visto en clase, quité algunas gráficas que resultaban redundantes, puesto que ya hay otras gráficas con la misma información, o simplemente códigos que arrojaban NA, para facilitar la lectura del alumno y profesor. 
+
+# Ejercicio 13.41
+Se realizó un análisis de observaciones pareadas para comparar las diferencias en tiempo medio de CPU para ejecutar programas de comparación en dos computadoras. Los datos se reproducen en la siguiente tabla.
+
+```{r}
+#FORMULACIÓN DATA FRAME
+tiempo<-c(1.12,1.73,1.04,1.86,1.47,2.10,1.15,1.72,1.10,1.87,1.46,2.15)
+computadora<-c(rep(c("compu 1", "compu 2"), c(6,6)))
+programa<-rep(c("p1","p2","p3","p4","p5","p6"), each =1, times =2)
+
+datos <-data.frame(Computadora = computadora, Programa=as.factor(programa), tiempo = tiempo) 
+datos
+
+# BOXPLOTS
+library(ggplot2)
+library(gridExtra)
+ggplot(data = datos, aes(x = Programa, y = tiempo)) +
+geom_boxplot() + theme_bw()
+
+ggplot(data = datos, aes(x = Computadora, y = tiempo)) +
+geom_boxplot() + theme_bw()
+
+ggplot(data = datos, aes(x = Programa, y = tiempo, colour = Computadora)) +
+geom_boxplot() + theme_bw()
+
+
+#GRÁFICOS DE INTERACCIÓN
+interaction.plot(computadora, programa, tiempo, col = 1:6, type = "b")
+interaction.plot(programa,computadora, tiempo,col = 2:5, type = "b")
+
+ggplot(data = datos, aes(x = programa, y = tiempo, colour = computadora,
+                         group = computadora)) +
+    stat_summary(fun = mean, geom = "point") +
+    stat_summary(fun = mean, geom = "line") +
+    labs(y  =  'mean (resistencia)') +
+    theme_bw()
+
+#ANOVA
+anova <- aov(tiempo ~ Computadora * Programa, data = datos)
+summary(anova)
+anovadd <- aov(tiempo ~ Computadora + Programa, data = datos)
+summary(anovadd)
+```
+Suposición prueba previa boxplots: 
+Los tiempos de ejecución de los programas son estadísticamente diferentes entre sí
+
+Interpretación gráficos de interacción: 
+No hay interacción entre el tiempo de ejecución y las computadoras al nivel de cada programa. 
+No hay interacción entre el tiempo de ejecución y los programas al nivel del tipo de computadora. 
+
+No hay diferencia significativa en los tiempos de ejercución de ambas computadoras
+
+Hipótesis:
+
+
+Computadoras:
+$H_0:\mu_1=\mu_2$
+$H_a:\mu_1\neq\mu_2$
+
+Dado que el p valor 0.137>0.05, no rechazamos h_0, entonces no existe evidencia que las medias de los tiempos de las computadores son diferentes
+
+Programas: 
+$H_0:\mu_1=\mu_2...\mu_6$
+$H_a:\mu_1\neq\mu_2$
+
+Elegimos el anova con modelo aditivo de ambos, puesto que el tiene  medidas de precisión más pequeñas.
+
+Dado que el p valor 3.23e-07<0.05 es signifivativo, rechazamos h_0, entonces las medias de los  tiempos de ejecución de los programas entre sí son diferentes (al menos una media diferente)
+
+# Ejercicio 13.42
+La siguiente tabla presenta datos de producción que se relacionan con la resistencia a las manchas, para tres materiales (M, M₂ y M3) tratados con cuatro productos químicos en un diseño de bloques aleatorizado. (Un valor bajo indica buena resistencia a las manchas.)
+
+```{r}
+#FORMULACIÓN DATA FRAME
+GradoManchas<-c(5,9,7,3,8,4,8,13,9,4,6,8)
+P.químico<-c(rep(c("A", "B","C","D"), c(3,3,3,3)))
+Material<-rep(c("M1","M2","M3"), each =1, times =4)
+
+datos <-data.frame(P.químico = P.químico, Material=as.factor(Material), GradoManchas = GradoManchas) 
+datos
+
+# BOXPLOTS
+library(ggplot2)
+library(gridExtra)
+
+ggplot(data = datos, aes(x = Material, y = GradoManchas)) +
+  geom_boxplot() + theme_bw()
+
+ggplot(data = datos, aes(x = P.químico, y = GradoManchas)) +
+  geom_boxplot() + theme_bw()
+
+ggplot(data = datos, aes(x = Material, y = GradoManchas, colour = P.químico)) +
+  geom_boxplot() + theme_bw()
+
+
+#GRÁFICOS DE INTERACCIÓN
+interaction.plot(P.químico, Material, GradoManchas, col = 1:6, type = "b")
+interaction.plot(Material, P.químico, GradoManchas,col = 2:5, type = "b")
+
+#ANOVA
+anova <- aov(GradoManchas ~ P.químico * Material, data = datos)
+summary(anova)
+anovadd <- aov(GradoManchas ~ P.químico  + Material, data = datos)
+summary(anovadd)
+
+```
+Suposicion previa boxplot:
+La resitencia a las manchas es estadísticamente diferente entre M1 y M2
+El rendimiento de los productos B y C son estadísticamente diferentes
+
+Interpretación gráficos de interacción:
+Hay interacción entre los productos químicos y la resistencia a manchas dependiendo su material, en este caso los materiales 2 y 3 tienen una interacción cruzada al utilizarse el producto químico D.
+
+Hay interacción entre los materiales y productos químicos, dependiendo el producto químico en este caso, hay una interacción cruzada entre el M2 y M3 al utilizarse los productos químicos DAB
+
+Hipotesis:
+VARCAT 1: Material
+  $H_0:\mu_1=\mu_2=\mu_3$
+  $H_a: \quad\text{alguna} \,\mu\, \text{es diferente}$
+VARCAT 2: P. químico
+  $H_0:\mu_a=\mu_b=...=\mu_d$
+  $H_a: \quad\text{alguna} \,\mu\, \text{es diferente}$ 
+  comentario conclusión
+  
+Conclusion: 
+Elegimos el anova con modelo aditivo de ambos, puesto que el tiene  medidas de precisión más pequeñas.
+Para la hipotesis de las medias de materiales, H0 es rechazada, por tanto, dado que el P valor 0.0219<0.05 podemos decir que las medias de la resistencia de manchas son estadísticamente diferentes dependiendo el material (al menos una media diferente). Asímismo, para los productos químicos H0 es rechazhada puesto que el P valor 0.0203<0.05 también es rechazada, las medias de los materiales en resistencia de manchas son estadísticamente diferentes (al menos una media diferente).
+
+# Ejercicio 13.44
+¿El promedio de los costos de los seguros de automóviles difieren para diferentes compañías de seguros? Otras variables que afectan los costos de los seguros son la ubicación geográfica, edades de los conduc- tores y el tipo de cobertura. Las siguientes son estimaciones (en dólares) del costo de pólizas de 6 meses para cobertura de responsabilidad básica para un solo hombre que ha tenido licencia de manejo durante 6-8 años, no ha cometido infracciones ni ha tenido accidentes y viaja en auto entre 12 600 y 15 000 semillas por año.
+```{r}
+#FORMULACIÓN DATA FRAME
+costo<-c(736,745,668,1065,1202,836,725,618,869,1172,1492,1384,1214,1502,1682,996,884,802,1571,1272)
+Ubicacion<-c(rep(c("Riverside", "San Bernardino", "Hollywood", "Long beach"), c(5,5,5,5)))
+Compañia<-rep(c("21stCentury","Allstate","AAA","Fireman's fund","State farme"), each =1, times =4)
+
+datos <-data.frame(Ubicacion = Ubicacion, Compañia=as.factor(Compañia), costo = costo) 
+datos
+
+# BOXPLOTS
+library(ggplot2)
+library(gridExtra)
+ggplot(data = datos, aes(x = Compañia, y = costo)) +
+  geom_boxplot() + theme_bw()
+
+ggplot(data = datos, aes(x = Ubicacion, y = costo)) +
+  geom_boxplot() + theme_bw()
+
+ggplot(data = datos, aes(x = Compañia, y = costo, colour = Ubicacion)) +
+  geom_boxplot() + theme_bw()
+
+#GRÁFICOS DE INTERACCIÓN
+interaction.plot(Ubicacion, Compañia, costo, col = 1:6, type = "b")
+interaction.plot(Compañia, Ubicacion, costo,col = 2:5, type = "b")
+
+#ANOVA
+anova <- aov(costo ~ Ubicacion * Compañia, data = datos)
+summary(anova)
+anovadd <- aov(costo ~ Ubicacion + Compañia, data = datos)
+summary(anovadd)
+```
+
+Suposicion previa boxplot:
+
+Hay una diferencia significativa en las medias de costo entre las compañias 21st,AAA y allstate comparadas con State farm
+Hay una diferencia significativa entre las medias de los costos en seguros en hollywood y san bernardino
+
+Interpretación gráficos de interaccion:
+Hay una interacción cruzada entre la ubicación y el costo de seguros influenciadas por las compañias state farm y firemans fund
+Hay una interacción cruzada entre los costos de las compañías Allstate y statefarm relacionadas con ubicaciones en hollywood y long beach
+Hipotesis:
+VARCAT 1: ubicacion
+  $H_0:\mu_1=\mu_2...\mu_4$
+  $H_a: \quad\text{alguna} \,\mu\, \text{es diferente}$
+VARCAT 2: compañia
+  $H_0:\mu_1=\mu_2...\mu_5$
+  $H_a: \quad\text{alguna} \,\mu\, \text{es diferente}$ 
+  
+Conclusion: 
+Elegimos entre los dos procedimientos aditivo y multiplicativo, el ADITIVO puesto que tiene 
+medidas de precisión más pequeñas. 
+En ambas variables categórticas H0 es rechazada, por tanto podemos decir que las medias del costo de seguros en cuanto a ubicación difieren entre sí, del mismo modo con las compañias  (al menos una media diferente).
+
+# Ejercicio 13.45
+Se realizó un experimento para determinar el efecto de tres métodos de preparación del suelo en el crecimiento de primer año de arbolitos de pino ayacahuite. Se seleccionaron cuatro lugares (terrenos de bosques del estado) y cada lugar se dividió en tres terrenos. Debido a que era probable que la fertilidad del suelo dentro de un terreno fuera más homogénea que entre lugares, se empleó un diseño de bloques aleatorizado, usando lotes como bloques. Los métodos de preparación del suelo fueron A (sin prepara- ción), B (fertilización ligera) y C (quema). Cada preparación del suelo se aplicó a un lote dentro de cada lugar. En cada lote se plantó el mismo número de arbolitos y la observación registrada fue el promedio de crecimiento del primer año (en centímetros) de la semilla en cada lote. Estas observaciones se repro- ducen en la siguiente tabla.
+```{r}
+#FORMULACIÓN DATA FRAME
+promedio<-c(11,13,16,10,15,17,20,12,10,15,13,10)
+preparacion<-c(rep(c("A", "B", "C"), c(4,4,4)))
+lugar<-rep(c("lug1","lug2","lug3","lug4"), each =1, times =3)
+
+datos <-data.frame(preparacion = preparacion, lugar=as.factor(lugar), promedio = promedio) 
+datos
+
+# BOXPLOTS
+library(ggplot2)
+library(gridExtra)
+ggplot(data = datos, aes(x = lugar, y = promedio)) +
+  geom_boxplot() + theme_bw()
+
+ggplot(data = datos, aes(x = preparacion, y = promedio)) +
+  geom_boxplot() + theme_bw()
+
+ggplot(data = datos, aes(x = lugar, y = promedio, colour = preparacion)) +
+  geom_boxplot() + theme_bw()
+
+#GRÁFICOS DE INTERACCIÓN
+interaction.plot(preparacion, lugar, promedio, col = 1:6, type = "b")
+interaction.plot(lugar, preparacion, promedio,col = 2:5, type = "b")
+
+#ANOVA
+anova <- aov(promedio ~ preparacion * lugar, data = datos)
+summary(anova)
+anovadd <- aov(promedio ~ preparacion + lugar, data = datos)
+summary(anovadd)
+```
+
+Suposicion previa boxplot:
+Hay diferencia siginificativa en el promedio de crecimiento entre los lugares 2 y 3 comparados con el lugar 4
+El metodo de preparación B es significativamente diferente en cuestión de promedio de crecimiento
+
+Interpretación gráficos de interacción:
+Hay una interacción cruzada entre la preparación del suelo y promedio de crecimiento influenciadas con el lug 2 y lug 3
+Hay una interacción cruzada entre entre el prom. de crecimiento y los lugares 1 y 3 cuando se utilizada la preparación A y C
+Hipotesis:
+VARCAT 1: PREPARACIÓN
+  $H_0:\mu_a=\mu_b=\mu_c$
+  $H_a: \quad\text{alguna} \,\mu\, \text{es diferente}$
+VARCAT 2: LUGAR 
+  $H_0:\mu_1=\mu_2...\mu_4$
+  $H_a: \quad\text{alguna} \,\mu\, \text{es diferente}$
+  comentario conclusión
+Conclusion: 
+Elegimos entre los dos procedimientos aditivo y multiplicativo, el ADITIVO puesto que tiene 
+medidas de precisión más pequeñas.
+Con la prueba anova podemos observar que para ambas variables se rechaza h0 dado que el p valor es menor a 0.05, por tanto podemos decir que las medias de crecimiento de las preparaciones son diferentes entre sí (al menos una media diferente), del mismo modo las medias del crecimiento de los lugares también son diferentes entre sí (al menos una media diferente).
+
+
+# Ejercicio 13.46
+A. E. Dudeck y C. H. Peacock informan sobre un experimento realizado para evaluar el rendimiento de varios céspedes de estación fría, para ver el efecto de siembra excesiva de greens de golf en invierno en el norte de la Florida. Una de las variables de interés fue la distancia que una pelota de golf rodaría en un green después de hacerla bajar por una rampa (que se usa para inducir una velocidad inicial constante a la pelota). Debido a que la distancia que la pelota rodaría estaba influida por la pendiente del green y la dirección en la que se podaba el césped, el experimento se realizó en un diseño de bloques aleatorizado. Los bloques se determinaron para que las pendientes de los tramos individuales fueran constantes dentro de bloques (se empleó un teodolito para asegurar la precisión) y todos los tramos fueron podados en la misma dirección y a la misma altura para eliminar los efectos de la poda. El césped base era "Tiftgreen Bermuda" en estado de casi hibernación. Se usaron el mismo método de siembra y rapidez de aplicación para todos los céspedes que están representados en la siguiente tabla de datos. Las medidas son distan- cias promedio (en metros) desde la base de la rampa hasta los puntos de parada de cinco pelotas que se hicieron bajar de la rampa y subir por la pendiente de cada tramo. Entre las variedades de césped usados en el estudio había A (ballico Pennfine), B (ballico Dasher), C (ballico real), D (supremo Marvelgreen) y E (ballico Barry). Las variedades de césped se plantaron dentro de bloques y dieron como resultado las medidas que se ilustran.?
+```{r}
+#FORMULACIÓN DATA FRAME
+disntancia<-c(2.764,2.568,2.506,2.612,2.238,3.043,2.977,2.533,2.675,2.616,2.600,2.183,2.334,2.164,2.127,3.049,3.028,2.895,2.724,2.697)
+bloque<-c(rep(c("b1","b2","b3","b4"), c(5,5,5,5)))
+pasto<-rep(c("A","B","C","D","E"), each =1, times =4)
+
+datos <-data.frame(bloque = bloque, pasto=as.factor(pasto), disntancia = disntancia) 
+datos
+
+# BOXPLOTS
+library(ggplot2)
+library(gridExtra)
+ggplot(data = datos, aes(x = pasto, y = disntancia)) +
+  geom_boxplot() + theme_bw()
+
+ggplot(data = datos, aes(x = bloque, y = disntancia)) +
+  geom_boxplot() + theme_bw()
+
+ggplot(data = datos, aes(x = pasto, y = disntancia, colour = bloque)) +
+  geom_boxplot() + theme_bw()
+
+#GRÁFICOS DE INTERACCIÓN
+interaction.plot(bloque, pasto, disntancia, col = 1:6, type = "b")
+interaction.plot(pasto, bloque, disntancia,col = 2:5, type = "b")
+
+#ANOVA
+anova <- aov(disntancia ~ bloque * pasto, data = datos)
+summary(anova)
+anovadd <- aov(disntancia ~ bloque + pasto, data = datos)
+summary(anovadd)
+```
+Suposicion previa boxplot:
+No hay diferencia significativa entre los tipos de pasto en cuanto a disntancia
+El bloque b3 es significativamente diferente en cuando a distancia con respecto a los demas bloques
+
+Intepretación gráficos de interacción:
+Hay interacción entre los bloques y disntancias cuando se considera el tipo de pasto (algunas de las lineas no son paraleas)
+Hay interacción entre los los pastos y las distancias cuando se consideran los bloques (las lineas no son paralelas)
+
+Hipótesis:
+VARCAT 1: BLOQUE
+  $H_0:\mu_1=\mu_2...\mu_4$
+  $H_a: \quad\text{alguna} \,\mu\, \text{es diferente}$
+VARCAT 2: PASTO
+  $H_0:\mu_1=\mu_2...\mu_5$
+  $H_a: \quad\text{alguna} \,\mu\, \text{es diferente}$ 
+
+Conclusion: 
+Elegimos entre los dos procedimientos aditivo y multiplicativo, el ADITIVO puesto que tiene 
+medidas de precisión más pequeñas.
+Ambas variables categóricas rechanzan su hipotesis nula dado que el p valor es menor a 0.05, por tanto hay al menos una media de las distancias medidas con los bloques es estadísticamente diferente y al menos una media de las medias de las disntancias medidas con los tipos de pasto es diferente
+
+# Ejercicio 13.50
+De vez en cuando, una sucursal de una empresa debe hacer envíos a otra sucursal en otro estado. Tres servicios de entrega de paquetería operan entre las dos ciudades donde están ubicadas las oficinas sucur- sales. Debido a que las estructuras de precios de los tres servicios de entrega son muy semejantes, la em- presa desea comparar los tiempos de entrega. La empresa piensa hacer varios tipos de envíos diferentes a su sucursal. Para comparar los servicios de paquetería, la empresa remite cada envío por triplicado, uno con cada servicio de paquetería. Los resultados citados en la siguiente tabla son los tiempos de entrega en horas.
+```{r}
+#FORMULACIÓN DATA FRAME
+tiempo<-c(15.2,16.9,17.1,14.3,16.4,16.1,14.7,15.9,15.7,15.1,16.7,17.0,14.0,15.6,15.5)
+envio<-c(rep(c("Env1","Env2","Env3","Env4", "Env5"), c(3,3,3,3,3)))
+paqueteria<-rep(c("I","II","III"), each =1, times =5)
+
+datos <-data.frame(envio = envio, paqueteria=as.factor(paqueteria), tiempo = tiempo) 
+datos
+
+# BOXPLOTS
+library(ggplot2)
+library(gridExtra)
+ggplot(data = datos, aes(x = paqueteria, y = tiempo)) +
+  geom_boxplot() + theme_bw()
+
+ggplot(data = datos, aes(x = envio, y = tiempo)) +
+  geom_boxplot() + theme_bw()
+
+ggplot(data = datos, aes(x = paqueteria, y = tiempo, colour = envio)) +
+  geom_boxplot() + theme_bw()
+
+#GRÁFICOS DE INTERACCIÓN
+interaction.plot(envio, paqueteria, tiempo, col = 1:6, type = "b")
+interaction.plot(paqueteria, envio, tiempo,col = 2:5, type = "b")
+
+#ANOVA
+anova <- aov(tiempo ~ envio * paqueteria, data = datos)
+summary(anova)
+anovadd <- aov(tiempo ~ envio + paqueteria, data = datos)
+summary(anovadd)
+```
+Suposicion previa boxplot:
+el tiempo de la paquetería I es estadísticamente diferente con respecto a los demás 
+No hay diferencia significativa entre los tiempos de envío
+
+Intepretación gráficos de interacción: 
+Hay interacción entre los envíos y tiempo cuando se toma en cuenta la paquetería 2 y 3
+Hay interacción entre las paqueterias 2 y 3 y el tiempo cuando se toma en cuenta el envío
+Hipotesis
+VARCAT 1: ENVIO
+  $H_0:\mu_1=\mu_2...\mu_5$
+  $H_a: \quad\text{alguna} \,\mu\, \text{es diferente}$
+VARCAT 2: PAQUETERIA
+  $H_0:\mu_1=\mu_2=\mu_3$
+  $H_a: \quad\text{alguna} \,\mu\, \text{es diferente}$ 
+Conclusion: 
+Elegimos entre los dos procedimientos aditivo y multiplicativo, el ADITIVO puesto que tiene 
+medidas de precisión más pequeñas.
+H0 es rechazada tanto como para los envíos, como para la paquetería dado que el p valor es menor a 0.05. Por tanto, existe al menos una media diferente para los tiempos de los envíos de paquetes, y del mismo modo, existe al menos una media diferente para los tiempos de envio de paqueterías.

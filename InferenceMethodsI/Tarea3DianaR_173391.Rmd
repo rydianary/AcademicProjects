@@ -1,0 +1,239 @@
+---
+title: "Pruebas de Hipotesis de diferencia de medias con muestras pequeñas"
+author: "Diana Laura Reyes Youshimatz 173391"
+date: "2023-02-17"
+output: html_document
+---
+
+# Ejercicio 1
+Muestras aleatorias independientes de $n_1=16$ y $n_2=13$ observaciones fueron seleccionadas de dos poblaciones normales con iguales varianzas:
+
+![](/cloud/project/PH6imagenes/Ejercicio 1 .png)
+
+a. Supongamos que usted desea detectar una diferencia entre las medias poblacionales. Exprese la hipótesis nula y alternativa para la prueba.
+
+$H_0: \mu_1-\mu_2=0  \quad H_1: \mu_1-\mu_2\neq0$
+
+```{r}
+#### Datos: 
+D0<- 0
+alpha<-0.01
+x1bar<-34.6
+x2bar<-32.2
+var1<-4.8
+var2<-5.9
+n1<-16
+n2<-13
+scuad<-(((n1-1)*var1+(n2-1)*var2)/(n1+n2-2))
+df=n1+n2-2
+tad<-qt(alpha/2, df,lower.tail = FALSE)
+tai<-qt(alpha/2, df)
+##Hipótesis 
+# H_0: M1-M2=D0 vs H_1: m1-m2!D0
+##Estadístico de prueba 
+
+t<-((x1bar-x2bar)-D0)/(sqrt(scuad*(1/n1 +1/n2)))
+sprintf("El valor del estadistico t es: %f", t)
+print("El valor del cuantil t alpha es:")
+sprintf("Izquierdo: %f", tai)
+sprintf("Derecho : %f", tad)
+## Region de rechazo
+if(t>tad || t<tai){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+## p-valor
+p<-2*pt(-(abs(t)),df)
+if(p<=alpha){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+```
+
+b. Encuentre la región de rechazo para la prueba del
+inciso a) para $\alpha=0.01$.
+
+De acuerdo con el cálculo recién realizado la región de rechazo es: $(-\infty,-2.77)\cup(2.77,\infty)$
+
+c. Encuentre el valor del estadístico de prueba.
+
+El valor del estadístico de prueba es: $2.79$
+
+d. Encuentre el valor $p$ aproximado para la prueba.
+
+El valor aproximado de $p$ es de $0.0094$
+
+e. Conclusiones: Dado que el valor del estadístico se encuentra en la región de rechazo, las medias muestrales no son estadísticamente iguales. 
+
+
+# Ejercicio 2 
+
+Jan Lindhe realizó un estudio sobre el efecto de un enjuague oral antiplaca sobre la acumulación de placa en dientes. Catorce personas cuyos dientes estaban muy limpios y pulidos se asignaron al azar a dos grupos de siete personas cada uno. Ambos grupos fueron asignados para usar enjuagues orales (no cepillado) durante un periodo de dos semanas. El grupo 1 utilizó un enjuague que contenía un agente antiplaca. El grupo 2, el grupo de control, recibió un enjuague similar excepto que, sin saberlo las personas, el enjuague no contenía agente antiplaca. Un índice x de placa, medida de acumulación de placa, fue registrado a las 4, 7 y 14 días. La media y desviación estándar para las mediciones de placa de 14 días se muestran en la tabla para los dos grupos.
+
+
+![](/cloud/project/PH6imagenes/Ejercicio 2 .png)
+
+```{r Ejercicio 2}
+#### Datos: 
+D0<- 0
+alpha<-0.05
+x1bar<-1.26
+x2bar<-0.78
+var1<-0.32^2
+var2<-0.32^2
+n1<-7
+n2<-7
+scuad<-((n1-1)*var1+(n2-1)*var2)/(n1+n2-2)
+df=n1+n2-2
+ta<-qt(alpha,n1+n2-2,lower.tail = FALSE)
+
+##Hipótesis 
+# H_0: M1-M2=D0 vs H_1: m1-m2>D0
+
+##Estadístico de prueba 
+
+t<-((x1bar-x2bar)-D0)/(sqrt(scuad*(1/n1 +1/n2)))
+sprintf("El valor del estadistico t es: %f", t)
+sprintf("El valor del cuantil es: %f", ta)
+
+## Region de rechazo
+if(t>ta){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+## p-valor
+p<-pt(t,n1+n2-2,lower.tail = FALSE)
+if(p<=alpha){  ##siempre <=
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+```
+
+
+a. Exprese la hipótesis nula y alternativa que deberían usarse para probar la efectividad del enjuague oral antiplaca.
+
+$H_0: \mu_1-\mu_2 =D_0 \quad vs\quad H_1: \mu_1-\mu_2>D_0$
+
+b. ¿Los datos dan suficiente evidencia para indicar que el enjuague oral antiplaca es eficaz? Pruebe usando
+$\alpha= 0.05$.
+
+Dado que $H_0$ cae en la región de rechazo, las pruebas son estadísticamente diferentes y el enjuage bucal antiplaca es eficaz
+
+c. Encuentre el valor p aproximado para la prueba.
+
+El valor aproximado es $p=0.008$
+
+# Ejercicio 3 
+
+El síndrome del compartimiento anterior crónico es una afección caracterizada por dolor inducido por ejercicio en la parte inferior de las piernas. Hinchazón y función dañada en nervios y músculos también acompañan a este dolor, que se alivia con reposo. Susan Beckham y colegas efectuaron un experimento, donde participaron 10 corredores sanos y 10 ciclistas sanos, para determinar si hay diferencias signifi cativas en mediciones de presión dentro del compartimiento anterior del músculo para corredores y ciclistas. El resumen de datos, presión del compartimiento en milímetros de mercurio (Hg), es como sigue:
+
+![](/cloud/project/PH6imagenes/Ejercicio 3 .png)
+
+a.  Pruebe para una diferencia significativa en presión del compartimiento entre corredores y ciclistas bajo la condición de reposo. Use $a = 0.05$.
+```{r Ejercicio 3}
+D0<- 0
+alpha<-0.05
+x1bar<-14.5
+x2bar<-11.1
+var1<-3.92^2
+var2<-3.98^2
+n1<-10
+n2<-10
+scuad<-((n1-1)*var1+(n2-1)*var2)/(n1+n2-2)
+df=n1+n2-2
+tad<-qt(alpha/2, df,lower.tail = FALSE)
+tai<-qt(alpha/2, df)
+##Hipótesis 
+# H_0: M1-M2=D0 vs H_1: m1-m2!=D0
+##Estadístico de prueba 
+
+t<-((x1bar-x2bar)-D0)/(sqrt(scuad*(1/n1 +1/n2)))
+sprintf("El valor del estadistico t es: %f", t)
+print("El valor del cuantil t_alpha es:")
+sprintf("Izquierdo: %f", tai)
+sprintf("Derecho : %f", tad)
+## Region de rechazo
+if(t>tad || t<tai){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+## p-valor
+p<-2*pt(-(abs(t)),df)
+if(p<=alpha){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+```
+Dado que el estadístico no cae en la región de rechazo, podemos decir que las medias de la afección en estado reposo son estadísticamente iguales. 
+
+c.    Con el fin de probar para una diferencia significativa en presión del compartimiento a máximo consumo de oxígeno, ¿debe usarse la prueba t agrupada o no agrupada? 
+
+Para este caso deberíamos utilizar la prueba t no agrupada, puesto que la afección en máximo consumo de oxígeno, la desviación estandar de la primera muestra es 3 veces más grande que la segunda muestra. 
+
+
+# Ejercicio 4 
+
+Un geólogo recolectó 20 muestras diferentes de mineral, todas del mismo peso y al azar las dividió en dos grupos. Los contenidos de titanio de las muestras, que encontró usando dos métodos diferentes, se detallan en la tabla:
+
+```{r}
+#### Datos: 
+samp1<-c(0.011, 0.013, 0.013, 0.015, 0.014,0.13, 0.010, 0.013, 0.011, 0.012)
+
+samp2<-c(0.011, 0.016, 0.013, 0.012, 0.015, 0.012, 0.017, 0.013, 0.014, 0.015)
+D0<- 0
+alpha<-0.05
+x1bar<-mean(samp1)
+x2bar<-mean(samp2)
+var1<-var(samp1)
+var2<-var(samp2)
+n1<-length(samp1)
+n2<-length(samp2)
+scuad<-((n1-1)*var1+(n2-1)*var2)/(n1+n2-2)
+df=n1+n2-2
+tad<-qt(alpha/2, df,lower.tail = FALSE)
+tai<-qt(alpha/2, df)
+##Hipótesis 
+# H_0: M1-M2=D0 vs H_1: m1-m2!=D0
+##Estadístico de prueba 
+
+t<-((x1bar-x2bar)-D0)/(sqrt(scuad*(1/n1 +1/n2)))
+sprintf("El valor del estadistico t es: %f", t)
+print("El valor del cuantil t_alpha es:")
+sprintf("Izquierdo: %f", tai)
+sprintf("Derecho : %f", tad)
+## Region de rechazo
+if(t>tad || t<tai){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+## p-valor
+p<-2*pt(-(abs(t)),df)
+if(p<=alpha){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+```
+
+a.   Use un método apropiado con el fin de probar para una diferencia significativa en los contenidos promedio de titanio usando los dos métodos diferentes.
+
+Dado que el estadística de la prueba no cae en la región de rechazo, podemos concluir que las medias de las muestras son estadísticamente iguales. 

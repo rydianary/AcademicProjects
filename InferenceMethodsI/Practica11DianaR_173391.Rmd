@@ -1,0 +1,51 @@
+
+
+# Ejercicio 1
+Se realizó un experimento para comparar las resistencias de dos tipos de papel de estraza: un papel de estraza estándar de un peso especificado y otro es el mismo papel tratado con una sustancia química. Piezas de cada tipo de papel, seleccionadas al azar de entre la producción, produjeron las mediciones de resistencia que se muestran en la tabla. Pruebe la hipótesis de que no hay diferencia en las distribuciones de resistencias para los dos tipos de papel, contra la hipótesis alternativa de que el papel tratado tiende a ser más fuerte. Use α = 0.05
+
+$H_0:\mu_1 = \mu_2 \quad vs \quad H_a:\mu_1 < \mu_2$
+```{r}
+estandar<-c(1.43 ,1.21 ,1.35 ,1.39, 1.17, 1.48, 1.42, 1.29, 1.40)
+tratado<-c(1.49 ,1.37, 1.67, 1.50, 1.31, 1.29, 1.52, 1.37, 1.44, 1.53)
+a<-wilcox.test(x=estandar,y=tratado, alternative = "less", conf.level = 0.95)
+a
+```
+Conclusión: Dado que el p-valor<0.05, es significativo y por tanto existe evidencia para afirmar que el papel tratado es más fuerte. 
+
+# Ejercicio 2 
+Los valores codificados para una medida de brillantez en papel (reflectividad ligera), elaborado por dos procesos diferentes, son como se muestra en la siguiente tabla para muestras de tamaño 13 obtenidas aleatoriamente de cada uno de los dos procesos. ¿Estos datos presentan suficiente evidencia para indicar una diferencia en la localización de las mediciones de brillantez para los dos procesos? Use α = 0.05
+
+$H_0:\mu_1 = \mu_2 \quad vs \quad H_a:\mu_1 \neq \mu_2$
+```{r}
+sampa<-c(6.1, 9.2, 8.7, 8.9, 7.6, 7.1, 9.5, 8.3, 9.0, 8.3, 8.9, 7.6, 7.1)
+sampb<-c(9.1, 8.2, 8.6, 6.9, 7.5, 7.9, 8.3, 7.8, 8.9, 8.6, 6.9, 9.5, 9.0)
+a<-wilcox.test(x=sampa,y=sampb, alternative = "two.sided", conf.level = 0.95)
+a
+```
+Conclusión: Dado que el p-valor no es menor a 0.05, no es significativo, por tanto no existe evidencia para afirmar que las medias de brillantez de los papeles usando los procesos A y B son diferentes.
+
+# Ejercicio 3 
+Se encontró que el contenido de nicotina de dos marcas de cigarrillos, medido en miligramos. A un nivel de significancia de 0.05 pruebe la hipótesis de que las media del contenido de nicotina de las dos marcas son iguales, en comparación con la hipótesis alternativa de que la media de la
+marca A es mayor.
+$H_0:\mu_1 = \mu_2 \quad vs \quad H_a:\mu_1 > \mu_2$
+```{r}
+sampa<-c( 2.1, 4.0, 6.3, 5.4, 4.8, 3.7, 6.1, 3.3)
+sampb<-c(4.1, 0.2, 3.1, 2.5, 4.0, 6.2, 1.6, 2.2, 1.9, 5.4)
+a<-wilcox.test(x=sampa,y=sampb, alternative = "greater", conf.level = 0.95)
+a
+```
+Conclusión: dado que el p-valor es no es significativo, no existe evidencia para afirmar que la media de nicotina de la marca A es mayor.
+
+# Ejercicio 4 
+ La Tucson State University ofrece dos programas de maestría en administración de empresas. En el primer programa, los estudiantes se reúnen dos noches por semana en el campus principal, en el centro de Tucson. En el segundo programa, sólo se comunican por internet con el profesor. El director de la maestría de Tucson quiere comparar el número de horas que estudiaron la semana pasada los dos grupos. Una muestra de 10 estudiantes en el campus y otra de 12 estudiantes por internet reveló la siguiente información. A un nivel de significancia de 0.05, ¿es posible concluir que los estudiantes por internet estudian
+más?
+$H_0:\mu_1 = \mu_2 \quad vs \quad H_a:\mu_1 < \mu_2$
+```{r}
+campus<-c(28, 16, 42, 29, 31, 22, 50, 42, 23, 25)
+internet<-c(26, 42, 65, 38, 29, 32, 59, 42, 27, 41, 46, 18)
+a<-wilcox.test(x=campus,y=internet, alternative = "less", conf.level = 0.95)
+a
+```
+conclusión: dado que el p-valor no es menor a 0.05, por tanto no existe evidencia para afirmar que los estudiantes por internet estudian más
+ 
+ 

@@ -1,0 +1,222 @@
+---
+title: "Pruebas de hipótesis para cociente de varianzas"
+author: "Diana Laura Reyes Youshimatz 173391"
+date: "`r Sys.Date()`"
+output: html_document
+---
+```{r}
+par(mfrow=c(1,2))
+curve(df(x,3,4),xlim=c(0,3),ylim=c(0,0.8),lwd=2,ylab='Densidad')
+curve(df(x,5,7),col=2,lwd=2,add=T)
+curve(df(x,12,12),col=3,lwd=2,add=T)
+curve(df(x,10,3),col=4,lwd=2,add=T)
+```
+
+# Ejercicio 1 
+A laptop computer maker uses battery packs supplied by two companies, A and B. While both brands have the same average battery life between charges (LBC), the computer maker seems to receive more complaints about shorter LBC than expected for battery packs supplied by company B. The computer maker suspects that this could be caused by higher variance in LBC for Brand B. To check that, ten new battery packs from each brand are selected, installed on the same models of laptops, and the laptops are allowed to run until the battery packs are completely discharged. The following are the observed LBCs in hours.
+
+![](/cloud/project/PH8.Imagenes/Exercise1.png)
+
+Test, at the 5 % level of significance, whether the data provide sufficient evidence to
+conclude that the LBCs of Brand B have a larger variance that those of Brand A.
+```{r}
+#Datos
+n1 <- length(sampb) 
+n2<- length(sampa)
+sampa<- c(3.2,3.4,2.8,3.0,3.0,3.0,2.8,2.9,3.0,3.0) #samp 2
+sampb<-c(3.0,3.5,2.9,3.1,2.3,2.0,3.0,2.9,3.0,4.1) #samp 1
+scuad1 <- var(sampb) #var samp b
+scuad2 <- var(sampa) #var samp a
+alpha <- 0.05
+df1 <- n1-1
+df2 <- n2-1
+fa <- qf(alpha,df1, df2,lower.tail=FALSE)
+
+#Hipotesis 
+#H_0: sig1^2 = sig^2 vs H_a: sig1^2 > sig2^2
+
+#Estadistico
+fc<-scuad1/scuad2
+
+sprintf("El valor del estadistico x es: %f",fa)
+sprintf("El valor del estadistico xa es: %f",fc)
+
+#Region de rechazo
+if(fc>fa){
+  print("Se rechaza H_0")
+}else{
+  print("No se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+#P-valor
+p <- pf(fc,df1,df2,lower.tail=FALSE)
+sprintf("El valor del pvalor es: %f",p)
+if(p<=alpha){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("No se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+
+```
+Since the t-statistic is rejected, we can conclude that there is evidence conclude that LBC's of brand B have a larger variance that those for brand A
+
+# Ejercicio 2
+A manufacturer of a blood-pressure measuring device for home use claims that its device is more consistent than that produced by a leading competitor. During a visit to a medical store a potential buyer tried both devices on himself repeatedly during a short period of time. The following are readings of systolic pressure.
+
+![](/cloud/project/PH8.Imagenes/Exercise2.png)
+
+
+a) Test, at the 5 % level of significance, whether the data provide sufficient evidence to conclude that the manufacturer?s claim is true.
+
+```{r}
+#Datos
+sampm<-c(132,134,129,129,130,132,129) #samp 2
+sampc<-c(129,132,129,138,131,132) #samp 1
+n1 <- length(sampc)
+n2<-length(sampm)
+scuad1 <- var(sampm) #var 2
+scuad2 <-  var(sampc) #var 1
+alpha <- 0.05
+df1 <- n1-1
+df2 <- n2-1
+fa <- qf(alpha,df1, df2,lower.tail=FALSE)
+
+#Hipotesis            competitor>manufacturer
+#H_0: sig1^2 = sig^2 vs H_a: sig1^2 > sig2^2
+
+#Estadistico
+fc<-scuad1/scuad2
+
+sprintf("El valor del estadistico x es: %f",fa)
+sprintf("El valor del estadistico xa es: %f",fc)
+
+#Region de rechazo
+if(fc>fa){
+  print("Se rechaza H_0")
+}else{
+  print("No se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+#P-valor
+p <- pf(fc,df1,df2,lower.tail=FALSE)
+sprintf("El valor del pvalor es: %f",p)
+if(p<=alpha){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("No se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+
+
+```
+With a 5% level of significance there is no evidente to cpmcñive that the manufacturer is right saying his product is mor consistent 
+
+
+b) Repeat the test at the 10 % level of significance.
+
+```{r}
+#Datos
+sampm<-c(132,134,129,129,130,132,129) #samp 2
+sampc<-c(129,132,129,138,131,132) #samp 1
+n1 <- length(sampc)
+n2<-length(sampm)
+scuad1 <- var(sampm) #var 2
+scuad2 <-  var(sampc) #var 1
+alpha <- 0.1
+df1 <- n1-1
+df2 <- n2-1
+fa <- qf(alpha,df1, df2,lower.tail=FALSE)
+
+#Hipotesis          competitor>manufacturer
+#H_0: sig1^2 = sig^2 vs H_a: sig1^2 > sig2^2
+
+#Estadistico
+fc<-scuad1/scuad2
+
+sprintf("El valor del estadistico x es: %f",fa)
+sprintf("El valor del estadistico xa es: %f",fc)
+
+#Region de rechazo
+if(fc>fa){
+  print("Se rechaza H_0")
+}else{
+  print("No se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+#P-valor
+p <- pf(fc,df1,df2,lower.tail=FALSE)
+sprintf("El valor del pvalor es: %f",p)
+if(p<=alpha){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("No se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+
+```
+Since the test statistic does not lie in the rejection región, the data do not provide sufficient evidence at the 10% level of significance to conclude there is a difference in the consistency of de devices.
+
+# Ejercicio 3
+
+El arsénico en agua potable es un posible riesgo para la salud. Un artículo reciente reportó concentraciones de arsénico en agua potable en partes por billón (ppb) para diez comunidades urbanas y diez comunidades rurales. Los datos son los siguientes:
+
+Urbana: 3, 7, 25, 10, 15, 6, 12, 25, 15, 7
+Rural: 48, 44, 40, 38, 33, 21, 20, 12, 1, 18
+
+¿las varianzas de las concentraciones son iguales o diferentes? Usar α = 0.05
+```{r}
+
+#Datos
+samp1<-c( 3, 7, 25, 10, 15, 6, 12, 25, 15, 7)
+samp2<-c(48, 44, 40, 38, 33, 21, 20, 12, 1, 18)
+n1 <- length(samp2)
+n2<-length(samp1)
+scuad1 <- var(samp2)
+scuad2 <- var(samp1)
+s1<-sd(samp1)
+s2<-sd(samp2)
+alpha <- 0.05
+df1 <- n1-1
+df2 <- n2-1
+fa <- qf(alpha/2,df1, df2,lower.tail=FALSE)
+
+#Hipotesis 
+#H_0: sig1^2 = sig2^2 vs H_a: sig1^2=! sig2^2
+
+#Estadistico
+fc<-scuad1/scuad2
+
+sprintf("El valor del estadistico x es: %f",fa)
+sprintf("El valor del estadistico xa es: %f",fc)
+
+#Region de rechazo
+if(fc>fa){
+  print("Se rechaza H_0")
+}else{
+  print("No se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+#P-valor
+p <- pf(fc,df1,df2,lower.tail=FALSE)
+sprintf("El valor del pvalor es: %f",p)
+if(p<=alpha){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("No se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+
+
+```
+Hallamos evidencia significativa para afirmar que las concentraciones de arsénico en el agua potable difieren en las zonas urbana y rural.
+
+

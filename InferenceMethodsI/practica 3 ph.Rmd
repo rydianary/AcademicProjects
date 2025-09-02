@@ -1,0 +1,518 @@
+---
+title: 'practica 3: Pruebas de hipótesis'
+author: "Diana Laura Reyes Youshimatz 173391"
+date: "2023-01-30"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Ejercicio 1
+El promedio semanal de ganancias para trabajadoras sociales es $\$670.$ ¿Los hombres de la misma posición tienen ganancias semanales promedio más altas que los de las mujeres? Una muestra aleatoria de n = 40 trabajadores sociales mostró $\bar{x}= \$725$ y $s = \$102$. Pruebe la hipótesis apropiada usando $α = 0.01$.
+
+```{r}
+m0<- 670
+alpha<-0.01
+xbar<-725
+s<-102
+n<-40
+za<-qnorm(alpha,lower.tail = FALSE)
+
+##Hipótesis---- H_0: M0=670 vs H_1: m0>670
+
+##Estadístico de prueba 
+z<-(xbar-m0)/(s/sqrt(n))
+sprintf("El valor del estadistico z es: %f", z)
+sprintf("El valor del cuantil es: %f", za)
+
+## Region de rechazo
+if(z>za){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+## p-valor
+p<-pnorm(z,lower.tail = FALSE)
+if(p<=alpha){  ##siempre <=
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("Pero No existe evidencia suficiente para afirmar H_1")
+}
+```
+Conclusión: $H_0$ cae en la región de rechazo, por tanto se puede concluir que el promedio semanal de ganacias de los hombres es mas alto que el de las mujeres. 
+
+# Ejercicio 2 
+En una reunión informativa para una ofcina corporativa, el gerente del hotel Continental reportó que el número promedio de habitaciones alquiladas por noche es 212. Uno de los funcionarios corporativos considera que esta cifra puede estar sobrestimada. Una muestra de 150 noches produce una media de 201.3 habitaciones y una desviación estándar de 45.5 habitaciones. Si estos resultados sugieren que el gerente ha "inflado" su reporte, será despedido. A un nivel de 1 %, ¿Cuál es el
+destino del gerente?
+
+```{r}
+#### Datos: 
+m0<- 212
+alpha<-0.01
+xbar<-201.3
+s<-45.5
+n<-150
+za<-qnorm(alpha) #quitamos lower tail
+
+##Hipótesis 
+# H_0: M0=212 vs H_1: m0<212 (cambia menor igual H1 )
+
+##Estadístico de prueba (Se queda igual)
+
+z<-(xbar-m0)/(s/sqrt(n))
+sprintf("El valor del estadistico z es: %f", z)
+sprintf("El valor del cuantil z_alpha es: %f", za)
+
+## Region de rechazo
+if(z<za){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+## p-valor
+p<-pnorm(z)   #quitamos lowertail
+if(p<=alpha){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+```
+Conclusión: Como $H_0$ es rechazada, la prueba sugirere que el gerente a "inflado" su reporte, entonces será despedido. 
+
+# Ejemplo 3 
+
+La producción diaria para una planta química local ha promediado 880 toneladas en los últimos años. A la gerente de control de calidad le gustaría saber si este promedio ha cambiado en meses recientes. Ella selecciona al azar 50 días de entre la base de datos y calcula el promedio y desviación estándar de las n = 50 producciones como $\bar{x} = 871$ toneladas y s = 21 toneladas, respectivamente. Pruebe la hipótesis apropiada usando $α = 0.05.$
+
+```{r}
+#### Datos: 
+m0<- 880
+alpha<-0.05
+xbar<-871
+s<-21
+n<-50
+zad<-qnorm(alpha/2, lower.tail = FALSE)
+zai<-qnorm(alpha/2)
+##Hipótesis 
+# H_0: M0=880 vs H_1: m0=!880
+
+##Estadístico de prueba 
+
+z<-(xbar-m0)/(s/sqrt(n))
+sprintf("El valor del estadistico z es: %f", z)
+sprintf("El valor del cuantil derecho es: %f", zad)
+
+## Region de rechazo
+if(z>zad || z<zai){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+## p-valor
+p<-2*pnorm(-(abs(z)))
+if(p<=alpha){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+```
+Conclusión: Al rechazar H_0 a un nivel alpha, podemos afirmar que el promedio de la producción de la planta química local ha cambiado en los últimos meses 
+
+# Ejercicio 4
+Una compañía pone a la venta un enjuague bucal que contiene una cierta cantidad por mililitro
+de un elemento químico que puede dañar la capa de esmalte. La norma establece que el nivel permitido de tal componente químico no debe sobrepasar las dos unidades por mililitro. Se sospecha
+que la compañía que fabrica este producto no está atendiendo a la norma, por lo que las autoridades sanitarias inician una investigación analizando una muestra representativa de 100 elementos.
+Calculando el nivel medio de sustancia por mililitro de la muestra, se obtiene un valor de 2.01, con una desviación estándar s de 0.3. Elabore una prueba de hipótesis para la media con un nivel de significancia de 0.01
+
+```{r}
+#### Datos: 
+m0<- 2
+alpha<-0.01
+xbar<-2.01
+s<-0.3
+n<-100
+za<-qnorm(alpha,lower.tail = FALSE)
+
+##Hipótesis 
+# H_0: M0=2 vs H_1: m0>2
+
+##Estadístico de prueba 
+
+z<-(xbar-m0)/(s/sqrt(n))
+sprintf("El valor del estadistico z es: %f", z)
+sprintf("El valor del cuantil es: %f", za)
+
+## Region de rechazo
+if(z>za){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+## p-valor
+p<-pnorm(z,lower.tail = FALSE)
+if(p<=alpha){  ##siempre <=
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("Pero No existe evidencia suficiente para afirmar H_1")
+}
+
+```
+Conclusión: Como la prueba de la hipóteisis no rechaza $H_0$ concluimos que la compañia esta atebdiendo a la norma 
+
+# Ejercicio 5 
+
+Supongamos que un embotellador desea probar la hipótesis de que la media poblacional de su contenido es 16 onzas. El embotellador selecciona una muestra de n=50 con una media de 16.357 onzas y una desviación estándar de 0.866 onzas. Elabore una prueba de hipótesis para la media con un nivel de significancia de 0.05
+
+```{r}
+m0<- 16
+alpha<-0.05
+xbar<-16.357
+s<-0.866
+n<-50
+zad<-qnorm(alpha/2, lower.tail = FALSE)
+zai<-qnorm(alpha/2)
+##Hipótesis 
+# H_0: M0=16 vs H_1: m0=!16
+
+##Estadístico de prueba 
+
+z<-(xbar-m0)/(s/sqrt(n))
+sprintf("El valor del estadistico z es: %f", z)
+sprintf("El valor del cuantil derecho es: %f", zad)
+
+## Region de rechazo
+if(z>zad || z<zai){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+## p-valor
+p<-2*pnorm(-(abs(z)))
+if(p<=alpha){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")}
+```
+Conclusión: como $H_0$ se rechaza a un nivel de significacia de 0.05, concluimos que la media poblacional de su producto contenido no es 16 onzas. 
+
+# Ejercicio 6 
+Una muestra aleatoria de 100 muertes registradas en Estados Unidos el año pasado muestra una vida promedio de 71.8 años. Suponga una desviación estándar poblacional de 8.9 años. Queremos probar si la vida media hoy en día es mayor a 70 años con base en esa muestra. Utilizar un nivel de significancia de 0.05.
+
+```{r}
+m0<- 70
+alpha<-0.05
+xbar<-71.8
+s<-8.9
+n<-100
+za<-qnorm(alpha,lower.tail = FALSE)
+
+##Hipótesis 
+# H_0: M0=70 vs H_1: m0>70
+
+##Estadístico de prueba 
+
+z<-(xbar-m0)/(s/sqrt(n))
+sprintf("El valor del estadistico z es: %f", z)
+sprintf("El valor del cuantil es: %f", za)
+
+## Region de rechazo
+if(z>za){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+## p-valor
+p<-pnorm(z,lower.tail = FALSE)
+if(p<=alpha){  ##siempre <=
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("Pero No existe evidencia suficiente para afirmar H_1")
+}
+
+```
+
+Conclusión: Dado que $H_0$ es rechazada, podemos decir que la vida media es mayor a 70 años 
+
+# Ejercicio 7 
+El factor pH es una medida de la acidez o alcalinidad del agua. Una lectura de 7.0 es neutral; valores de más de 7.0 indican alcalinidad y, debajo de 7.0 implican acidez. Loren Hill dice que la mejor probabilidad de pescar robalo es cuando el pH del agua está entre 7.5 y 7.9. Supongamos que usted sospecha que la lluvia ácida está bajando el pH de su lugar de pesca favorita y desea determinar si el pH es menor a 7.5. Suponga que una muestra aleatoria de 30 especímenes de agua dieron lecturas de pH con media 7.3 y desviación estándar de 0.2. Realice una prueba estadística
+de las hipótesis usando α = .05.
+
+```{r}
+#### Datos: 
+m0<- 7.5
+alpha<-0.05
+xbar<-7.3
+s<-0.2
+n<-30
+za<-qnorm(alpha) #quitamos lower tail
+
+##Hipótesis 
+# H_0: M0=7.5 vs H_1: m0<7.5 (cambia menor igual H1 )
+
+##Estadístico de prueba (Se queda igual)
+
+z<-(xbar-m0)/(s/sqrt(n))
+sprintf("El valor del estadistico z es: %f", z)
+sprintf("El valor del cuantil z_alpha es: %f", za)
+
+## Region de rechazo
+if(z<za){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+## p-valor
+p<-pnorm(z)   #quitamos lowertail
+if(p<=alpha){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+
+```
+
+Conclusión: Como se rechaza $H_0$ podemos terminar que en efecto el pH es menor a 7.5 
+
+#Ejercicio 8 
+La gerencia de First Bank of America está planeando basar los cargos para las cuentas corrientes
+en el saldo diario promedio. El gerente de pruebas preferenciales desea probar la hipótesis de que
+las cuentas tienen un promedio de $312. Se selecciona una muestra de 200 cuentas, dando una
+media de 298.10, y una desviación estándar de 97.30. Elabore una prueba de hipótesis para la
+media con un nivel de significancia de 0.01
+
+```{r}
+#### Datos: 
+m0<- 312
+alpha<-0.01
+xbar<-298.1
+s<-97.30
+n<-200
+zad<-qnorm(alpha/2, lower.tail = FALSE)
+zai<-qnorm(alpha/2)
+##Hipótesis 
+# H_0: M0=312 vs H_1: m0=!312
+
+##Estadístico de prueba 
+
+z<-(xbar-m0)/(s/sqrt(n))
+sprintf("El valor del estadistico z es: %f", z)
+sprintf("El valor del cuantil derecho es: %f", zad)
+
+## Region de rechazo
+if(z>zad || z<zai){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+## p-valor
+p<-2*pnorm(-(abs(z)))
+if(p<=alpha){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+
+```
+Conclusión: No se recjaza $H_0$ en un nivel de siginifacancia del 0.01, por tanto el gerente tiene razón y las cuentas tienen un promedio de US$312
+
+# Ejercicio 9
+Según una encuesta realizada por la Oficina del Censo de los Estados Unidos durante 2005-2007, el tiempo diario de viaje de ida y vuelta de los trabajadores estadounidenses es en promedio 25 minutos, suponiendo una desviación estándar de 13 minutos. Un investigador desea determinar si el promedio nacional describe el tiempo medio de desplazamiento para todos los trabajadores en el área de Chicago. Los tiempos de desplazamiento se obtienen para una muestra aleatoria de 100 trabajadores de esta área, y el tiempo medio es de 22.5 minutos. Prueba la hipótesis apropiada
+usando un nivel de significación de 0.05.
+
+```{r}
+#### Datos: 
+m0<- 25
+alpha<-0.05
+xbar<-22.5
+s<-13
+n<-100
+zad<-qnorm(alpha/2, lower.tail = FALSE)
+zai<-qnorm(alpha/2)
+##Hipótesis 
+# H_0: M0=25 vs H_1: m0=!25
+
+##Estadístico de prueba 
+
+z<-(xbar-m0)/(s/sqrt(n))
+sprintf("El valor del estadistico z es: %f", z)
+sprintf("El valor del cuantil derecho es: %f", zad)
+
+## Region de rechazo
+if(z>zad || z<zai){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+## p-valor
+p<-2*pnorm(-(abs(z)))
+if(p<=alpha){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+```
+Conclusión: como $H_0$ no se rechaza, entonces concluimos que el promedio nacional tambien describe el tiempo de desplazamiento para los trabajadores de Chicago
+
+# Ejercicio 10 
+Consulte el estudio del British Journal of Educational Psychology (Vol. 80, 2010) sobre la tentación
+de los conductores adolescentes de exceder el límite de velocidad. En una encuesta de 258 estudiantes conductores realizada 5 meses después de que los estudiantes asistieron a una presentación
+de conductor seguro, las respuestas (medidas en una escala de 7 puntos) a la pregunta ”¿Confías
+en que puedes resistir la persuasión de tus amigos para conducir más rápido?” tenía una media de
+4.98 y una desviación estándar de 1.62. Considera probar Considera probar H0 : µ = 4.7. contra
+H1 : µ > 4.7 con un nivel de significancia de 0.05
+
+```{r}
+#### Datos: 
+m0<- 4.7
+alpha<-0.05
+xbar<-4.98
+s<-1.62
+n<-258
+za<-qnorm(alpha,lower.tail = FALSE)
+
+##Hipótesis 
+# H_0: M0=4.7 vs H_1: m0>4.7
+
+##Estadístico de prueba 
+
+z<-(xbar-m0)/(s/sqrt(n))
+sprintf("El valor del estadistico z es: %f", z)
+sprintf("El valor del cuantil es: %f", za)
+
+## Region de rechazo
+if(z>za){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+## p-valor
+p<-pnorm(z,lower.tail = FALSE)
+if(p<=alpha){  ##siempre <=
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("Pero No existe evidencia suficiente para afirmar H_1")
+}
+
+```
+Conclusión: Como $H_0$ es rechazada, podemos decir que en el 95% de los casos los adolescentes no resisten la persuasión de sus amigos para conducir más rápido
+
+# Ejercicio 11 
+Según el estudio del Current Allergy & Clinical Immunology (Marzo de 2004) de n = 46 empleados del hospital que fueron diagnosticados con una alergia al látex por la exposición al polvo en guantes de látex. La cantidad de guantes de látex usados por semana por los trabajadores muestreados se resume de la siguiente manera: x¯ = 19.3 y var = 11.9. Supongamos que µ representa el número medio de guantes de látex utilizados por semana por todos los empleados del hospital. Considera probar H0 : µ = 20. contra H1 : µ < 20 con un nivel de significancia de 0.01
+
+```{r}
+#### Datos: 
+m0<- 20
+alpha<-0.01
+xbar<-19.3
+s<-11.9
+n<-46
+za<-qnorm(alpha) #quitamos lower tail
+
+##Hipótesis 
+# H_0: M0=20 vs H_1: m0<20 (cambia menor igual H1 )
+
+##Estadístico de prueba (Se queda igual)
+
+z<-(xbar-m0)/(s/sqrt(n))
+sprintf("El valor del estadistico z es: %f", z)
+sprintf("El valor del cuantil z_alpha es: %f", za)
+
+## Region de rechazo
+if(z<za){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+## p-valor
+p<-pnorm(z)   #quitamos lowertail
+if(p<=alpha){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+```
+Conclusión: Como $H_0$ no se rechaza, podemos decir que en promedio el 20% de los empleados del hospital resultan diagnosticados con alergia al látex. 
+
+# Ejercicio 12 
+
+Los estándares establecidos por dependencias del gobierno indican que los estadounidenses no deben exceder una ingesta diaria de sodio con promedio de 3300 miligramos (mg). Para averiguar si los estadounidenses están excediendo este límite, se seleccionó una muestra de cien de ellos y se encontró que la media y desviación estándar de ingesta diaria de sodio era de 3400 mg y 1100 mg, respectivamente. Use α = 0.05 para efectuar una prueba de hipótesis.
+
+```{r}
+#### Datos: 
+m0<- 3300
+alpha<-0.05
+xbar<-3400
+s<-1100
+n<-100
+za<-qnorm(alpha,lower.tail = FALSE)
+
+##Hipótesis 
+# H_0: M0=3300 vs H_1: m0>3300
+
+##Estadístico de prueba 
+
+z<-(xbar-m0)/(s/sqrt(n))
+sprintf("El valor del estadistico z es: %f", z)
+sprintf("El valor del cuantil es: %f", za)
+
+## Region de rechazo
+if(z>za){
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("No existe evidencia suficiente para afirmar H_1")
+}
+
+## p-valor
+p<-pnorm(z,lower.tail = FALSE)
+if(p<=alpha){  ##siempre <=
+  print("Se rechaza H_0 a un nivel alpha")
+}else{
+  print("NO se rechaza H_0 a un nivel alpha")
+  print("Pero No existe evidencia suficiente para afirmar H_1")
+}
+
+```
+Conclusión. Como $H_0$ no es rechazado en el nivel de significancia determinado, entonces los estadounidences en promedio no exceden la ingesta de de 3300 mg de sodio
