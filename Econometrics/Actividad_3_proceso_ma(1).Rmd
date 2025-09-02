@@ -1,0 +1,137 @@
+---
+title: "Actividad_3"
+author: "Diana Laura Reyes Youshimatz"
+date: "2024-01-17"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Código simulación de IDD noise
+
+```{r}
+#install.packages("ggplot2")
+library(ggplot2)
+#simulacion iidnoise
+set.seed(91)
+num_datos<-100
+
+#generar datos iid (ruido)
+ruido_iid<- rnorm(num_datos, mean = 0, sd=1)
+
+
+
+# iiddnoise ---------------------------------------------------------------
+
+library(ggplot2)
+#simulación de iidnoise
+set.seed(91) #fijar la semilla para reproducibilidad
+num_datos <- 100
+#gemerar datos IID(ruiddo)
+ruido_iid <- rnorm(num_datos, mean=0, sd=1)
+
+#visualizar la serie de tiempo generada
+ggplot()+
+  geom_line(aes(x=1:num_datos, y=ruido_iid),color="#8B2252", 
+            linetype="solid") +
+  geom_hline(yintercept = 0, linetype="dashed", color="sienna2") +
+  labs(title ="simulación de Ruido IID", 
+       x="Tiempo",
+       y="Valor") +
+  theme_minimal()
+```
+
+
+# Código WhiteNoise
+```{r}
+library(MASS)
+#simulacion de ruido blanco
+
+#configuracion de la simulacion
+set.seed(17) 
+#generar ruido blanco correlacionado
+n<-100 #Numero de datos en la serie de tiempo
+mean_vector <- rep(0,n) #media 0 para cada variable
+cov_matrix <- diag(n) #matriz de covarianza diagional
+wn<- mvrnorm(n=1, mu = mean_vector, Sigma = cov_matrix)
+
+#convertir la matriz a un vector
+wn <- as.vector(wn)
+wn
+
+#Visulizar la serie de tiempo generada
+ggplot()+
+  geom_line(aes(x=1:n, y=wn),color="lightblue4", linetype="solid") +
+  geom_hline(yintercept = 0, linetype="dashed", color="rosybrown3") +
+  labs(title ="simulación de Ruido blanco", 
+       x="Tiempo",
+       y="Valor") + 
+  theme_minimal()
+
+
+```
+
+# 3 Simulación MA(1)
+
+
+$ X_t = Z_t + θZ_{t−1}, t = 0,±1, . . . , $
+
+```{r}
+### simulación MA(1)
+
+n=1000
+theta= 3
+sig2 =4
+Z_0 = 0
+
+### simulación de Z_t ~WN(0,Sigmacuadrada)
+mean_vector <- rep(0,n)
+cov_matrix <- diag(n)
+
+#rnorm() samples from the univariate normal distribution
+wn <- rnorm(n, mean=0, sd=sqrt(sig2))
+Z_t <- c(Z_0,wn)
+
+###  Definir X_t = Z_t + θZ_{t−1}
+X_t<-c()
+X_t = Z_t + theta
+
+
+
+for(i in 2: length(Z_t)){
+  X_t[i-1] <- Z_t[i] + theta * Z_t[i-1]
+}
+
+# el promedio de X_t=0 y el segundo momento de X_t se aproxima a sigma^2*(1+ theta^2)
+
+print('primer momento')
+m1 <- mean(X_t)
+m1
+
+print('segundo momento' )
+m2 <- var(X_t) + mean(X_t)
+m2
+
+print('aproximanción 2do momento se cumple')
+sig2*(1+theta^2)
+
+
+
+```
+
+```{r}
+library(ggplot2)
+data <- data.frame(t = 1:1001, X_t = X_t)
+ggplot(data, aes(x = t, y = X_t)) +
+   geom_hline(yintercept = 0, linetype="dashed", color="rosybrown3") +
+  geom_line(color = "wheat3") +
+  labs(title = "Simulación MA(1)",
+       x = "Tiempo",
+       y = "Valor de X_t") + theme_minimal()
+```
+
+

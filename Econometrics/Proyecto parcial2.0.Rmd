@@ -1,0 +1,399 @@
+---
+title: "Proyecto parcial 2"
+author: "Silvia Alejandra García García - 170535, Diana Laura Reyes Youshimatz - 173391"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+  
+## 1. Introducción
+  
+Tenemos datos sobre la prevalencia de la diabetes, la cual consta de 3143 observaciones en 14 variables. Estos datos provienen del año 2012.  
+  
+En este caso, recomendamos utilizar las variables relacionadas con las mujeres. La primera razón por la que tomamos en cuenta las variables de mujeres es que la cantidad de variables relacionadas con las mujeres es mayor que la de los hombres. La segunda razón es que al seleccionar una variable de respuesta al azar, el modelo tendría en cuenta tanto las variables de mujeres como las de hombres para construir el modelo, y el resultado no sería funcional.  
+  
+Debido a lo anterior, decidimos eliminar ciertas columnas de la base de datos original, que resultaron ser: state, County, percent.men.diabetes, num.men.obese, percent.men.obese, num.men.inactive.leisure y FIPS.codes 
+  
+Las variables que tiene nuestra base de datos son:   
+- **num.women.diabetes: **Número de mujeres con diabetes.  
+- **percent.women.diabetes: **Porcentaje de mujeres que tienen diabetes.  
+- **num.women.obese: **Número de mujeres con obesidad  
+- **percent.women.obese: **Porcentaje de mujeres obesas.  
+- **num.women.inactive.leisure: **Numero de mujeres sin actividad fisica
+
+- **percent.women.inactive.liesure: **Porcentaje de mujeres sin actividad fisica
+  
+Nuestra base de datos fue obtenida de: https://www.openintro.org/data/index.php?data=diabetes.prev
+  
+## 2. Gráfico de correlaciones
+  
+A continuacion podemos ver un gráfico que relaciona las variables de la base de datos, mostrando diagramas de dispersión y sus coeficientes de relación:
+  
+  
+```{r}
+library(ISLR2)
+library(PerformanceAnalytics)
+library(readr)
+#datos <- read_csv("D:/Users/Silvia/Downloads/diabetes prev.1.csv", show_col_types = FALSE)
+datos<-read_csv("diabetes prev.1.csv")
+
+chart.Correlation(datos)
+```
+  
+  
+A partir del diagrama de dispreción podemos observar que las variables si tienen correlación entre ellas.
+La variable que tienen mayor correlación con las otras variables, es por eso que la variable que elegimos es percent.women.inactive.liesure. Además de que su grafica en la diagonal es simetrica visualmente.
+  
+## 3. selección del mejor modelo 
+  
+**Modelo vacio**  
+```{r}
+#modelo vacío
+
+modelovacio <- lm(percent.women.inactive.liesure~1, data=datos)
+summary(modelovacio)
+AIC(modelovacio)
+
+
+```
+  
+**Modelo completo**
+  
+```{r}
+#modelo completo
+
+modelocompleto <- lm(percent.women.inactive.liesure~., data=datos)
+summary(modelocompleto)
+AIC(modelocompleto)
+
+```
+  
+**Modelo Forward**
+  
+```{r}
+#Regresión Forward
+modeloForward <- step(modelovacio,
+                      scope = list(lower=modelovacio,upper=modelocompleto),
+                      direction = "forward", trace = 1)
+summary(modeloForward)
+AIC(modeloForward)
+
+```
+  
+  
+**Modelo Backward**
+  
+```{r}
+#Regresión Backward
+modeloBackward <- step(modelocompleto,
+                       scope = list(lower=modelovacio,upper=modelocompleto),
+                       direction = "backward", trace = 1)
+summary(modeloBackward)
+AIC(modeloBackward)
+
+```
+  
+  
+**Modelo Stepwise**
+  
+```{r}
+#Regresión Stepwise
+modeloStepwise <- step(modelovacio,
+                       scope = list(lower=modelovacio,upper=modelocompleto),
+                       direction = "both", trace = 1)
+summary(modeloStepwise)
+
+```
+
+  
+Las variables que tienen mayor significancia para nuestro modelo son las variables percent.women.diabetes, percent.women.obese, num.women.obese, num.women.inactive.leisure, num.women.diabetes. Los cuales juntos tienen un AIC= 16737.55, el cual mantiene los mismo valores que el modelo compelto.  
+  
+### a) Prueba global  
+  
+$H_0 = \beta_1 = \beta_2= ...=\beta_5=0 \\ vs \\ H_1:\ Al\ menos\ una\ beta\ diferente\ de\ 0$  
+  
+Esta prueba la hacemos con el fin de conocer si los coeficientes $\beta_i$ aportan información al modelo global.
+  
+```{r}
+modeloml <- lm(formula = percent.women.inactive.liesure ~ percent.women.diabetes + 
+    percent.women.obese + num.women.obese + num.women.inactive.leisure + 
+    num.women.diabetes, data = datos)
+summary(modeloml)
+summary(aov(modeloml))
+
+result <- summary(modeloml)
+result
+AIC(modeloml)
+```
+
+  
+Del summary observamos que Adjusted R-squared:  0.6543, por lo que podríamos decir que el modelo es admisible.  
+Del aov destacamos que el valor mínimo de los errores mencionados anteriormente es SSE= 37645. Además el $\sigma^2\ = 12$, también llamado el cuadrado medio del error. 
+  
+De ésta prueba global observamos que p-valor< 2.2e-16 por lo que es menor a 0.05 y con esto inferimos que le modelo es significativo.  
+De igual forma observando el resultado anterior de la función anova, concluimos que al menos un coeficiente de las variables es distinto de cero.
+  
+### b) Prueba individual 
+  
+Tomamos en cuenta los valores de los p-valor de cada beta y observamos que el p-valor más pequeño es del $\beta_1$, por lo tanto haremos la prueba individual de este valor  
+  
+$H_0: \beta_i = 0\  vs \ H_1:\beta_i \neq 0\\ i=1,2,3,4,5 $  
+   
+   
+```{r}
+
+#Prueba de beta_1
+pvalue_b1<-result$coefficients[2,4]
+cat(paste("El P-valor para Beta 1 es: ",pvalue_b1))
+
+if(pvalue_b1<=0.05){
+  cat(paste("\n Se rechaza H_0 a un nivel: 0.05 por tanto beta_1 es diferente de cero \n,"), sep="\n")
+}else{
+  cat(paste("\nNo existe evidencia para afirmar beta_1 es diferente de cero"), 0.05, sep="\n")
+}
+
+
+```
+  
+Podemos observar que la prueba individual nos indica que el valor del p-valor del beta es distinto de 0.
+  
+  
+  
+## 5. Análisis residuales  
+  
+```{r}
+error <- result$residuals
+hist(error,col="seagreen",breaks="FD", main="Histograma de residuales",xlab="",ylab="")
+boxplot(error,col="lightsteelblue3", main="Residuales")
+par(mfrow=c(2,2))
+plot(modeloml,col="rosybrown3")
+
+
+```
+  
+Del histograma, podemos destacar que tiene una distribución simétrica un poco sesgada hacia la izquierda en el centro, pero en el resto de la gráfica se comporta simétricamente.  
+  
+En el boxplot, observamos que tiene muchos valores atípicos en ambos extremos. Los primeros 3 cuartiles se encuentran muy cerca, por lo que el rango intercuartil es muy pequeño.  
+  
+Finalmente, vemos que los gráficos *Scale-Location* y *“Normal Q-Q* se espera que los datos sigan la linea recta y así pueda indicarnos que se distrubutan normal. En el primero hay una saturación de datos y en la segunda si se comporta de la forma esperada.
+  
+**Prueba de normalidad**  
+  
+$H_0:$ Los errores son normales
+$H_1:$ Los errores no son normales  
+  
+**Prueba de independencia**  
+$H_0:$ Los errores son independientes  
+$H_1:$ Los errores son dependientes  
+  
+
+```{r}
+#Prueba de normalidad
+shapiro.test(error)
+
+library(nortest)
+ad.test(error)
+
+
+#Prueba de independencia
+library(lmtest)
+dwtest(modeloml)
+
+```
+  
+De acuerdo a los p-valor de las pruebas e Shapiro y Anderson, el p-valor de ambos es menor a 0.05, por lo que se rechaza $H_0$, así que los residuales no se distribuyen normal.  
+  
+Con la prueba de independencia, el p-valor es menor a 0.05, por que al rechazar $H_0$ indicamos que los errores son dependientes.  
+Por lo tanto, al no cumplir con los requisitos de los errores, podemos concluir que el modelo no tiene un buen desempeño.
+
+
+
+## 6. Modelo de interacción 
+
+Un modelo de interacción en regresión se refiere a un tipo de modelo estadístico que incluye términos que representan la influencia conjunta de dos o más variables predictoras en la variable de respuesta. Esto significa que el efecto de una variable puede depender del valor de otra u otras variables.Un modelo de interacción podría considerar no solo el efecto individual de cada variable, sino también cómo interactúan entre sí.
+
+Por tanto construimos el siguiente modelo de interacción. 
+```{r}
+
+y<-datos$percent.women.inactive.liesure
+x1<- datos$percent.women.diabetes
+x2<- datos$percent.women.obese
+x3<- datos$num.women.obese
+x4<- datos$num.women.inactive.leisure
+x5<- datos$num.women.diabetes
+
+
+modint <- lm(y~x1+x2+x3+x4+x5+x1*x2*x3*x4*x5)
+summary(modint)
+AIC(modint)
+result1<-summary(modint)
+#pairs(datos, col="brown",pch=5 ,lwd="1") #grafico de expresion fila:y  columna: x
+
+```
+
+
+### a) prueba global
+
+A partir del p-valor de este modelo podemos determinar que al ser menor 0.05, en este caso 2.2e-16<0.05,  el modelo es significativo.
+  
+Podemos destacar de este modelo que su AIC es de 15282.78, el cual es más bajo que el modelo anterior.  
+  
+También podemos observar que como es un modelo de regresión multiple con interacciones, el "Adjusted R-squared" es 0.7842, lo cual considera el tamaño de la muestra y el número de parametros, como éste llega a tener más de un valor de 50%, podemos esperar que el modelo tenga un buen y pertinente desmpeño.
+
+
+
+### b) Prueba individual  
+  
+Observando los p-values del modelo interacción podemos destacar que hay ciertas interacciones entre variables que no son significativas, es decir que o aportan al modelo. Por ejemplo b3, cuyo p-value es mayor a 0.05 y por tanto no es es de gran aportación al modelo. Por otro lado la mayoría de las betas sí son significativas y más de una tiene un p valor extremadamente pequeño. En este caso elegiremos b1 que representa x1.
+
+$H_0: \beta_i = 0\  vs \ H_1:\beta_i \neq 0\\ i=1,2,3,4,5 $    
+
+```{r}
+extract <- function(model) {
+  coefficients <- model$coefficients
+  num_coefs <- length(coefficients)
+  
+  for (i in seq_along(coefficients)) {
+    assign(paste0("b", i-1), coefficients[i], envir = .GlobalEnv)
+    cat(paste0("b", i-1, " <- ", coefficients[i], "\n"))
+  }
+  
+  return(coefficients)
+}
+
+```
+
+```{r}
+extract(modint)
+```
+
+Realizamos la prueba individual para uno de los coeficientes más significativos
+
+```{r}
+pvalueb_10 <- result1$coefficients[2,4]
+#pvalueb_1
+if(pvalueb_10<=0.05){
+  print("Se rechaza H0 a un nivel 0.05, es decir b1 es significativo para el modelo (distinto de cero)")
+}else{
+  print("No existe evidencia para afirmar que b1 es diferente de cero")
+}
+```
+
+### Pruebas de normalidad
+$H_0:$ Los errores son normales
+$H_1:$ Los errores no son normales
+```{r}
+error1 <- modint$residuals
+# H_0: Los datos son normales vs H_1:Los datos NO- son normales
+#Prueba de normalidad
+shapiro.test(error1)
+
+library(nortest)
+ad.test(error1)
+
+
+#Prueba de independencia
+library(lmtest)
+dwtest(modint)
+
+```
+A partir de las pruebas para determinar normalidad, obtenemos un p valor menor a 2.2e-16 < 0.05, por tanto los datos no siguen una distribucion normal. 
+
+### pruebas de independencia 
+$H_0:$ Los errores son independientes  
+$H_1:$ Los errores son dependientes   
+  
+  
+Dado que en la prueba de independecia obtuvimos un p valor menor a 2.2e-16  < 0.05, se rechaza H=0 y podemos asumir que los errores son dependientes
+
+
+
+## 7. Modelo cuadrático completo  
+  
+### a) Prueba global
+  
+```{r}
+mod2 <- lm(y~ I(x2^2)+I(x4^2))
+summary(mod2)
+AIC(mod2)
+result2<-summary(mod2)
+```
+  
+
+A partir del p-valor de este modelo podemos determinar que al ser menor 0.05, en este caso 2.2e-16<0.05,  el modelo es significativo.
+Podemos destacar de este modelo que su AIC es de 69884.35 el cual es mucho mas alto que los modelos lineales
+
+También podemos observar que como es un modelo de regresión multiple con interacciones, el "Adjusted R-squared" es 0.4733 , lo cual considera el tamaño de la muestra y el número de parametros, como éste llega a tener menos de un valor de 50%, podemos esperar que el modelo tiene un desempeño de poca fiabilidad
+  
+  
+### b) Prueba individual 
+
+
+$H_0: \beta_i = 0\  vs \ H_1:\beta_i \neq 0\\ i=1,2,3,4,5 $  
+  
+ Determinamos I(x1^2) como la que vamos a analizar individualmente, dado que es la más significativa
+  
+```{r}
+pvalue2b_1 <- result2$coefficients[2,4]
+
+if(pvalue2b_1<=0.05){
+  print("Se rechaza H0 a un nivel 0.05, es decir b1 es significativo para el modelo (distinto de cero)")
+}else{
+  print("No existe evidencia para afirmar que b1 es diferente de cero")
+}
+```
+podemos confirmar que b1 es distinto de 0 y por tanto sigificativa para el modelo. 
+
+### Pruebas de normalidad
+$H_0:$ Los errores son normales
+$H_1:$ Los errores no son normales
+```{r}
+
+error2 <- mod2$residuals
+# H_0: Los datos son normales vs H_1:Los datos NO- son normales
+shapiro.test(error2) # para n<30
+library(nortest)
+ad.test(error2)
+
+```
+Dado que en la prueba de independecia obtuvimos un p value   0.03276 < 0.05, se rechaza H=0 y podemos asumir que los datos no son normales
+
+
+### pruebas de independencia 
+$H_0:$ Los errores son independientes  
+$H_1:$ Los errores son dependientes 
+```{r}
+library(lmtest)
+dwtest(mod2)
+```
+Dado que en la prueba de independecia obtuvimos un p value  es menor a 2.2e-16 < 0.05, se rechaza H=0 y podemos asumir que los errores son dependientes
+
+## 8. Conclusión  
+  
+```{r}
+aic.modml <- AIC(modeloml)
+aic.modint <-AIC(modint)
+aic.mod2 <-AIC(mod2)
+aic.modml 
+aic.modint 
+aic.mod2 
+
+
+```
+
+
+La creación del modelo óptimo para predecir las respuestas con respecto a diversas variables es una tarea compleja, que requiere de la prueba de múltiples modelos más allá de los elaborados en estas pruebas. 
+
+Los modelos elaborados en este proyecto, mostraban que en las 3 pruebas los datos no son normales, que los errores son dependientes, y del Adjusted R-squared obteníamos que el ajuste entre estas variables en los tres modelos iba en un 40% a 70% aproximandamente a lo largo de las pruebas. 
+
+Aunque ninguna prueba tuvo un gran y fiable desempeño, de los 3 modelos, podemos observar que el modelo de interacción tiene el AIC más pequeño de todas las pruebas, el mejor ajuste y por tanto lo catalogamos como el mejor de los 3. Pero si observamos a detalle las pruebas globales e independientes de los tres modelos, los tres indican que los modelos no van a obtener un buen comportamiento. Del modelo de interacción hacemos notar que no es modelo parsimonioso, por tanto aún es posible elaborar un modelo más adecuado en pruebas futuras. 
+  
+
+
+
+

@@ -1,0 +1,311 @@
+---
+title: "Tarea 2"
+author: "Diana Laura Reyes Youshimatz"
+date: "2024-02-28"
+output: html_document
+
+---
+
+
+
+
+```{r}
+
+# Función para imprimir las raíces de los polinomios
+print_roots <- function(roots, name) {
+  cat(name, "roots:", roots, "\n")
+}
+
+check_arima_properties <- function(phi, theta) {
+  # Coeficientes del polinomio de autorregresión
+  AR_roots <- polyroot(c(1, -phi))
+  
+  # Coeficientes del polinomio de media móvil
+  MA_roots <- polyroot(c(1, theta))
+  
+  # Verificar estacionariedad
+  stationary <- all(abs(AR_roots) > 1)
+  
+  # Verificar invertibilidad
+  invertible <- all(abs(MA_roots) > 1)
+  
+  #print("Estacionariedad:", properties$stationary)
+  #print_roots(properties$AR_roots, "AR")
+  #print("Invertibilidad:", properties$invertible)
+  #print_roots(properties$MA_roots, "MA")
+  
+  return(list(stationary = stationary, invertible = invertible, AR_roots = AR_roots, MA_roots = MA_roots))
+}
+
+
+```
+
+Funcion simulacion MA
+```{r}
+plot_MA <- function(coef, n) {
+  # Generar una secuencia de ruido blanco
+  set.seed(123)  # Para reproducibilidad
+  w <- rnorm(n)
+
+  # Aplicar la fórmula del modelo de media móvil
+  X <- numeric(n)
+  for (t in length(coef):n) {
+    X[t] <- sum(coef * w[(t - length(coef) + 1):t])
+  }
+
+  # Graficar el proceso resultante
+  plot(X, type = "l", main = "Proceso de Media Móvil (MA)",
+       xlab = "Tiempo", ylab = "Valor")
+}
+
+
+```
+
+
+# MODELOS RA
+```{r}
+phi <- c(-0.9,0.1)
+theta <- c(0.0)
+properties <- check_arima_properties(phi, theta)
+properties
+```
+```{r}
+phi <-c(-0.9,0.1)
+theta <- c(0)
+ACF = ARMAacf(ar=phi, ma=theta,5)
+ACF
+```
+
+
+# MODELOS MA
+
+a)  $X_t: = w_t + 0.8w_{t−1}$
+
+i) Invertibilidad
+ 
+```{r}
+# Ejemplo de uso
+phi <- c(0.0)
+theta <- c(0.8)
+properties <- check_arima_properties(phi, theta)
+properties
+```
+
+ii) Simulación proceso
+
+```{r}
+# Ejemplo de uso: MA(1) con coeficiente 0.8 y longitud de serie temporal 100
+plot_MA(c(0.8), 30)
+
+```
+
+
+iii) Funcion autocorrleacion teórica
+```{r}
+theta <- c(0.8)
+ACF = ARMAacf(ar=c(0), ma=theta,3)
+ACF
+
+```
+iv) Autocorrelacion parcial
+
+```{r}
+PACF = ARMAacf(ar=0, ma=c(0.8), 24, pacf=TRUE)
+par(mfrow=c(1,2))
+plot(PACF, type="h", xlab="lag", ylim=c(-.8,1)); abline(h=0)
+```
+
+
+
+b) $Xt = w_t + 0.7w_{t−1}− 0.2w_{t−2}$
+
+i) Invertibilidad
+
+```{r}
+check_arima_properties(c(0),c(0.7,-0.2))
+```
+
+
+ii) Simulación proceso
+
+```{r}
+# Ejemplo de uso: MA(1) con coeficiente 0.8 y longitud de serie temporal 100
+plot_MA(c(0.7,-0.2), 30)
+
+```
+
+iii) Funcion autocorrleacion teórica
+```{r}
+theta <- c(0.7,-0.2)
+ACF = ARMAacf(ar=c(0), ma=theta,4)
+ACF
+
+```
+iv) Autocorrelacion parcial
+
+```{r}
+PACF = ARMAacf(ar=0, ma=c(0.7,-0.2), 24, pacf=TRUE)
+par(mfrow=c(1,2))
+plot(PACF, type="h", xlab="lag", ylim=c(-.8,1)); abline(h=0)
+```
+
+c) $Xt = w_t - 0.7w_{t−1} + 0.2w_{t−2}$
+
+i) Invertibilidad
+
+```{r}
+check_arima_properties(c(0),c(-0.7,0.2))
+```
+
+
+ii) Simulación proceso
+
+```{r}
+# Ejemplo de uso: MA(1) con coeficiente 0.8 y longitud de serie temporal 100
+plot_MA(c(-0.7,0.2), 30)
+
+```
+
+iii) Funcion autocorrleacion teórica
+```{r}
+theta <- c(-0.7,0.2)
+ACF = ARMAacf(ar=c(0), ma=theta,4)
+ACF
+
+```
+iv) Autocorrelacion parcial
+
+```{r}
+PACF = ARMAacf(ar=0, ma=c(-0.7,0.2), 24, pacf=TRUE)
+par(mfrow=c(1,2))
+plot(PACF, type="h", xlab="lag", ylim=c(-.8,1)); abline(h=0)
+```
+d) $Xt = w_t + 0.2w_{t−1}− 0.7w_{t−2}$
+
+i) Invertibilidad
+
+```{r}
+check_arima_properties(c(0),c(0.2,-0.7))
+```
+
+
+ii) Simulación proceso
+
+```{r}
+# Ejemplo de uso: MA(1) con coeficiente 0.8 y longitud de serie temporal 100
+plot_MA(c(0.2,-0.7), 30)
+
+```
+
+iii) Funcion autocorrleacion teórica
+```{r}
+theta <- c(0.2,-0.7)
+ACF = ARMAacf(ar=c(0), ma=theta,4)
+ACF
+
+```
+iv) Autocorrelacion parcial
+
+```{r}
+PACF = ARMAacf(ar=0, ma=c(0.2,-0.7), 24, pacf=TRUE)
+par(mfrow=c(1,2))
+plot(PACF, type="h", xlab="lag", ylim=c(-.8,1)); abline(h=0)
+```
+
+
+
+
+
+
+
+# Modelos ARMA
+Considera los siguientes modelos ARMA, donde $w_t$ es un proceso de ruido aleatorio blanco
+
+a) $ X_t − 0.9X_{t−1 }= w_t + 0.8w_{t−1}$
+
+## Estacionariedad e invertibilidad
+
+Estacionariedad
+```{r}
+stationarity(0.8)
+```
+
+```{r}
+# Coeficientes ARMA
+phi <- 0.9
+theta <- 0.8
+
+# Coeficientes del polinomio característico
+AR_roots <- polyroot(c(1, -phi))
+AR_roots
+
+# Verificar si las raíces están fuera del círculo unitario
+stationary <- all(abs(AR_roots) > 1)
+
+print(stationary)
+
+```
+
+i) Invertibilidad
+```{r}
+# Coeficientes del polinomio de media móvil
+MA_roots <- polyroot(c(1, theta))
+MA_roots
+# Verificar si las raíces están fuera del círculo unitario
+invertible <- all(abs(MA_roots) > 1)
+
+print(invertible)
+
+```
+## Simulación en R
+
+```{r}
+# Cargar la biblioteca necesaria
+#install.packages("forecast")
+library(forecast)
+
+# Especificar los parámetros del modelo ARMA
+phi <- 0.9  # Coeficiente autorregresivo
+theta <- 0.8  # Coeficiente de media móvil
+n <- 30  # Número de observaciones a simular
+
+# Generar datos del proceso ARMA
+arma_data <- arima.sim(list(order = c(1,0,1), ar = phi, ma = theta), n)
+
+# Graficar la serie temporal
+plot(arma_data, type="l", col="blue", xlab="Tiempo", ylab="Valor", main="Serie temporal del proceso ARMA(1,1)")
+
+```
+
+### ACF
+```{r}
+# Coeficientes AR y MA
+phi <- c(0.9)
+theta <- c(0.8)
+
+# Orden del modelo ARMA
+p <- length(phi)
+q <- length(theta)
+
+# Calcular la función de autocorrelación teórica
+acf_theoretical <- ARMAacf(ar = phi, ma = theta)
+print(acf_theoretical)
+
+```
+```{r}
+# Cargar la biblioteca necesaria
+library(stats)
+
+# Generar datos simulados de un proceso ARMA
+set.seed(123)  # Establecer semilla para reproducibilidad
+arma_data <- arima.sim(model = list(ar = c(0.9), ma = c(0.8)), n = 100)
+
+# Calcular la función de autocorrelación parcial
+pacf_values <- pacf(arma_data)
+
+# Graficar la función de autocorrelación parcial
+plot(pacf_values, main = "Función de autocorrelación parcial", xlab = "Rezago", ylab = "PACF")
+abline(h = 0, col = "gray", lty = 2)  # Línea de referencia en 0
+
+```
+

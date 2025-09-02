@@ -1,0 +1,196 @@
+---
+title: "Actividad 8"
+author: "Diana Laura Reyes Youshimatz"
+date: "2024-01-31"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Promedio Movil
+Ejemplo 1.5.1
+```{r}
+library(itsmr)
+library(ggplot2)
+strikes
+n<-length(strikes)
+strikesUsa = data.frame(strikes)
+strikes.ts = ts(strikes)
+class(strikes)
+
+y1<- smooth.ma(strikes.ts,1)
+y2<- smooth.ma(strikes.ts,2)
+
+ggplot()+
+  geom_line(aes(x=1:n, y=strikes.ts), color='green', linetype='solid')+
+  geom_line(aes(x=1:n, y=y1), color = 'gray17', linetype= 'solid') +
+   geom_line(aes(x=1:n, y=y2), color = 'magenta', linetype= 'solid') + 
+  labs(title = 'Strikes & smooth ma',x='tiempo', y='strikes') + theme_minimal()
+```
+## Calcular errores
+```{r}
+#al punto real restar el suavizado de orden 2
+w<-strikes.ts-y2
+ggplot()+
+   geom_line(aes(x=1:n, y=w), color = 'magenta4', linetype= 'dashed') + 
+  labs(title='Strikes errors', x ='Tiempo', y= 'error') + theme_light()
+
+prom <- mean(w)
+prom
+
+hist(w)
+qqnorm(w);qqline(w)
+boxplot(w)
+```
+## prueba normalidad
+H0: la muestra sigue dist. normal
+H1: la muestra NO sigue dist. normal
+```{r}
+library(nortest)
+library(stats)
+ad.test(w)
+shapiro.test(w)
+
+```
+Los errores siguen una distribucion normal
+
+# Suavizamiento exponencial
+```{r}
+y<-smooth.exp(strikes.ts,0.25)
+y1<-smooth.exp(strikes.ts,0.5)
+w<-strikes.ts-y
+
+ggplot()+
+   geom_line(aes(x=1:n, y=y), color = 'yellow4', linetype= 'dashed') +
+  geom_line(aes(x=1:n, y=w), color = 'sienna3', linetype= 'dashed') +
+  geom_line(aes(x=1:n, y=y1), color = 'yellow2', linetype= 'dashed') +
+   labs(title='Strikes smoohthing', x ='Tiempo', y= 'Stikes') + theme_classic()
+prom<-mean(w)
+prom
+
+hist(w)
+qqnorm(w);qqline(w)
+boxplot(w)
+```
+## Prueba de normalidad
+```{r}
+ad.test(w)
+shapiro.test(w)
+```
+Los errores siguen dist. normal
+
+# Ajuste polinomial
+```{r}
+y<-smooth.fft(strikes.ts,0.4)
+w<-strikes.ts-y
+
+ggplot()+
+  geom_line(aes(x=1:n, y=w), color = 'gold4', linetype= 'dashed') + 
+  labs(title='Ajuste polinomial', x ='Tiempo', y= 'error') + theme_linedraw()
+prom<-mean(w)
+prom
+hist(w)
+qqnorm(w);qqline(w)
+boxplot(w)
+```
+## Prubea de normalidad
+```{r}
+ad.test(w)
+shapiro.test(w)
+```
+Los errores son normales
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+library(itsmr)
+library(ggplot2)
+#install.packages('astsa')
+library(astsa)
+library(stats)
+
+
+```
+
+```{r}
+airpass
+head(airpass)
+
+#Serie de tiempo 1 (transforma la primera columna)
+AP.ts<- ts(airpass, start= 1949, freq = 12)
+AP.ts
+AP.df <- data.frame(month = time(AP.ts), pass=as.vector(AP.ts))
+
+head(AP.df)
+# Visualizar la serie de tiempo generada
+ggplot(AP.df, aes(x=month, y=pass)) + 
+  geom_line(color = 'pink3' ,size = 1) + 
+  labs(x='Año', y = 'Numero de pasajeros',
+       title = 'ST de Número de pasajeros') + 
+  theme_minimal()
+```
+
+## Decomposicion aditiva
+Descompone en estacionalidad, tendencia, ruido aleatorio
+```{r}
+decomp <- decompose(AP.ts)
+summary(decomp)
+
+#Extraer las componentes
+trend<- decomp$trend
+seasonal <- decomp$seasonal
+residuals <- decomp$random
+
+
+# Crear un dataframe para ggplot
+decomp_df <- data.frame(Month = time(AP.ts), Original = as.vector(AP.ts),
+                        Trend = trend, Seasonal = seasonal, Residuals = residuals)
+ 
+# Crear el gráfico con ggplot
+ggplot(decomp_df, aes(x = Month)) +
+  geom_line(aes(y = Original), color = 'black', size = 1, linetype = 'solid', alpha = 0.7) +
+  geom_line(aes(y = Trend), color = 'blue', size = 1, linetype = 'solid', alpha = 0.7) +
+  geom_line(aes(y = Seasonal), color = 'green', size = 1, linetype = 'solid', alpha = 0.7) +
+  geom_line(aes(y = Residuals), color = 'red', size = 1, linetype = 'solid', alpha = 0.7) +
+  labs(x = 'Año', y = 'Valor', title = 'Descomposición de la Serie Temporal') +
+  theme_minimal()
+ 
+ggplot(decomp_df, aes(x = Month)) +
+  geom_line(aes(y = Seasonal), color = 'green', size = 1, linetype = 'solid', alpha = 0.7) +
+  geom_hline(yintercept=0, linetype='dashed', color='red') +
+  labs(x = 'Año', y = 'seasonal', title = 'Seasonal') +
+  theme_minimal()
+ 
+ggplot(decomp_df, aes(x = Month)) +
+  geom_line(aes(y =residuals), color = 'blue', size = 1, linetype = 'solid', alpha = 0.7) +
+  geom_hline(yintercept=0, linetype='dashed', color='red') +
+  labs(x = 'Año', y = 'seasonal', title = 'Seasonal') +
+  theme_minimal()
+ 
+ggplot(decomp_df, aes(x = Residuals)) +
+  geom_histogram(binwidth = 10, fill = 'blue', color = 'black', alpha = 0.7) +
+  labs(x = 'Residuals', y = 'Frecuencia', title = 'Histograma de Residuals') +
+  theme_minimal()
+ 
+acf(AP.ts,lag.max = 10,plot = TRUE)
+pacf(AP.ts,lag.max = 10,plot = TRUE)
+
+```
+

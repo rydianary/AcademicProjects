@@ -1,0 +1,226 @@
+---
+title: "Actividad Regresión Logística"
+author: "Silvia Alejandra García García - 170535 Diana Laura Reyes Youshimatz - 173391"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+  
+    
+Considerando la base de datos de diabetes, utiliza la variable Outcome como variable de respuesta, en la cual, 0 representa no tiene diabetes, y 1 representa tiene diabetes.
+
+  
+#1. Modelo de regresión logística múltiple  
+  
+Construye un modelo de regresión logística múltiple con la variable de respuesta Outcome.  
+  
+```{r}
+library(ISLR2)
+library(PerformanceAnalytics)
+library(readr)
+#dato <-read_csv("D:/Users/Silvia/Downloads/diabetes.csv")
+dato <-read_csv("diabetes.csv")
+y <- dato$Outcome
+# y2 <- cut(y, 2, labels=c('No', 'Yes'))
+x1 <- dato$Pregnancies
+x2 <- dato$Glucose
+x3 <- dato$BloodPressure
+x4 <- dato$SkinThickness
+x5 <- dato$Insulin
+x6 <- dato$BMI
+x7 <- dato$DiabetesPedigreeFunction
+x8 <- dato$Age
+
+modelorlm <- glm(y~x1+x2+x3+x4+x5+x6+x7+x8, data=dato, family = "binomial")
+
+summary(modelorlm)
+#observamos que las variables significativas son x1, 2, 3, 6, 7
+
+coef(modelorlm)
+glmprobs <- predict(modelorlm, type="response")
+
+```
+  
+Del summary podemos observar que las variables que no son significativas para el modelos son: x4, x5, y x8. a continuación indicamos como están evaluadas éstas variables.
+  
+-**x1:** Pregnancies
+-**x2:** Glucose
+-**x3:** BloodPressure
+-**x4:** SkinThickness
+-**x5:** Insulin
+-**x6:** BMI
+-**x7:** DiabetesPedigreeFunction
+-**x8:** Age
+  
+# 2. Información  
+  
+La base de datos proporcionada por el profesor se origina del *National Institute of Diabetes and Digestive and Kidney Diseases*. El proposito de la formación de los datos es predecir, basado en la mediciónes diganósticas, si un paciente tiene diabetes.  
+  
+Esta base se conforma de datos de mujeres de al menos 21 años de edad de ascendencia india Pima.  
+
+-**Embarazos** se refiere al número de veces que una persona ha estado embarazada.  
+-**Glucosa** hace referencia a la concentración de glucosa en la sangre después de un período de 2 horas tras una prueba de tolerancia oral a la glucosa.  
+-**Presión arterial** representa la presión arterial diastólica medida en milímetros de mercurio (mm Hg).  
+-**Grosor de la piel** se relaciona con el grosor del pliegue cutáneo en la zona del tríceps, medido en milímetros.  
+-**Insulina** corresponde a la cantidad de insulina sérica en la sangre después de 2 horas, medida en unidades internacionales por mililitro (mu U/ml).  
+-**IMC** o Índice de Masa Corporal es una medida que evalúa la relación entre el peso de una persona en kilogramos y la altura al cuadrado en metros.  
+-**DiabetesPedigreeFunction** se refiere a una función que evalúa la predisposición genética a la diabetes, basada en la historia familiar.   
+-**Edad**indica la edad de la persona en años.  
+-**Resultado** es la variable de clase, que generalmente se representa como 0 o 1, y se utiliza para indicar si la persona tiene diabetes (1) o no (0).  
+
+#3. Gráfica que relaciona la variable respuesta y predictora  
+  
+```{r}
+library(PerformanceAnalytics)
+cor(dato)
+suppressWarnings(chart.Correlation(dato))
+attach(dato)
+```
+
+#4. Mejoración del modelo de regresión logística múltiple  
+  
+```{r}
+
+modelolm1 <- glm(y~x1+x2+x3+x6+x7, data=dato, family = "binomial")
+
+summary(modelolm1)
+
+
+coef(modelolm1)
+glmprobs <- predict(modelolm1, type="response")
+
+```
+  
+Ya que tenemos el modelo con nuestras variables significativas, seguimos con nuestras pruebas, las cuales necesitaremos crear nuestro conjunto de entrenamiento de un 80% de nuestra base y un conjunto de prueba con el 20% restante.   
+    
+#5.  Conjunto de entrenamiento 80% y de prueba 20%  
+  
+```{r}
+set.seed(123)
+
+# Proporción de datos para el conjunto de prueba (20%)
+proporcion_prueba <- 0.2
+
+# Dividir los datos en conjunto de entrenamiento y conjunto de prueba
+conjuntos <- split(dato, sample(2, nrow(dato), replace = TRUE, prob = c(1 - proporcion_prueba, proporcion_prueba)))
+
+# Conjunto de entrenamiento (80%)
+train <- conjuntos[[1]]
+
+
+# Conjunto de prueba (20%)
+test <- conjuntos[[2]]
+
+dim(dato)
+dim(train)
+dim(test)
+
+```
+
+
+
+#6. Ajuste del modelo logístico  
+  
+```{r}
+Outcome_test <- test$Outcome
+glmtrain<-glm(Outcome~Pregnancies+Glucose+BloodPressure+BMI+DiabetesPedigreeFunction,
+              data=train,family="binomial")
+
+summary(glmtrain)
+
+```
+  
+A partir de nuestra base de datos nueva, creada a partir del conjunto de entrenamiento, la cual fue seleccionada de forma aleatoria, implementamos el modelo propuesto anteriormente, el cual notamos que todas nuestras variables son significativas para el modelo.  
+Para éste tipo de modelo no hay una forma de medir su efectividad, es por eso que se hará una matriz de confusión y se utilizarán las metricas de evaluación.  
+  
+  
+# 7. Variable glmprobs  
+  
+```{r}
+
+glmprobst<-predict(glmtrain,test,type="response")
+glmpredt<-rep("0",155)
+glmpredt[glmprobst>0.5]="1"
+table(glmpredt,Outcome_test)
+table(glmpredt,Outcome_test)*(1/155)
+
+```
+
+
+#8. Matriz mosaico  
+  
+```{r}
+library(vcd)
+mosaic(table(glmpredt,Outcome_test),
+       gp=gpar(fill=matrix(c("green3","red2","red2","green3"),2,2)))
+```
+## 9. Métricas de evaluación
+
+# 9. Métricas 
+Accurency: Proporción de veces que el modelo predice bien las etiquetas en general.
+
+Precisión: Proporción de veces que el modelo predice bien la clase objetivo.
+
+Sensibilidad: Indica si el modelo puede identificar a todos los ejemplos de la clase objetivo.
+
+F1: Precisión y sensibilidad son objetivos contrapuestos normalmente. La métrica F1 sirve comocompromiso entre ambos. Es la media armónica entre precisión y sensibilidad.
+
+Specificity: Proporción de elementos que no son de la clase objetivo y que, efectivamente, nofueron identificados como tales.
+
+Tasa de falsos positivos: Es similar a la precisión, pero se calcula considerando la proporción deverdaderos positivos sobre todas las instancias predichas como positivas (TP / (TP + FP)
+
+Tasa de falsos negativos: Mide la proporción de verdaderos negativos sobre todas lasinstancias predichas como negativas (TN / (TN + FN))
+
+```{r}
+
+# Cálculo de las métricas
+conf_matrix <- table(glmpredt, Outcome_test)
+
+# True Positives (TP)
+tp <- conf_matrix["1", "1"]
+
+# True Negatives (TN)
+tn <- conf_matrix["0", "0"]
+
+# False Positives (FP)
+fp <- conf_matrix["0", "1"]
+
+# False Negatives (FN)
+fn <- conf_matrix["1", "0"]
+
+# Accuracy
+accuracy <- (tp + tn) / sum(conf_matrix)
+
+# Precisión (Precision)
+precision <- tp / (tp + fp)
+
+# Sensibilidad (Recall)
+sensitivity <- tp / (tp + fn)
+
+# F1-Score
+f1_score <- 2 * (precision * sensitivity) / (precision + sensitivity)
+
+# Tasa de Falsos Positivos (False Positive Rate)
+fpr <- fp / (fp + tn)
+
+# Tasa de Falsos Negativos (False Negative Rate)
+fnr <- fn / (fn + tp)
+
+# Imprimir las métricas
+cat("Accuracy:", accuracy, "\n")
+cat("Precisión:", precision, "\n")
+cat("Sensibilidad (Recall):", sensitivity, "\n")
+cat("F1-Score:", f1_score, "\n")
+cat("Tasa de Falsos Positivos:", fpr, "\n")
+cat("Tasa de Falsos Negativos:", fnr, "\n")
+
+```
+
+# 10. Conclusiones 
+
+Tenemos una exactitud mayor al 70% por lo cual el modelo es suficientemente exacto para considerarlo como un modelo aplicable.Por otro lado su precisión la cual es menor 60% por lo cual podemos determinar que los verdaderos positivos no son efectivamente identificados en una gran parte de los resultados que etiqueta como verdaderos y del mismo modo su sensibilidad del 70% indica una proporcion regular para identificar los casos positivos reales.
+
+Dado F1 score tambien podemos determinar que tiene un equilibrio regular entre precision y sensibilidad y tanto sus tasas de falsos positivos como falsos negativos no son altas, menos al 30%, pero aun se necesita mayor entrenamiento para mejores resultados. Por tanto concluimos que es un modelo de desempeño admisible más no bueno dadas estas métricas de análisis.

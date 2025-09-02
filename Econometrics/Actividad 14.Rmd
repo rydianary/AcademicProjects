@@ -1,0 +1,231 @@
+---
+title: "Actividad 14"
+author: "Diana Laura Reyes Youshimatz"
+date: "2024-03-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## CBE
+
+Producción mensual de tres artículos (Chocolate, Beer and electricoty)en Australia entre 1958 y 1990. Los datos comienzan en enero de 1958 y se extienden hasta diciembre de 1990.
+
+
+## Serie de producción de electricidad
+
+Consideremos la serie de producción de electricidad en la cual los datos muestran una tendencia positiva y un ciclo estacional regular. Además, la varianza aumenta con el tiempo, lo que sugiere que una transformación logarítmica puede ser apropiada. Se ajusta un modelo de regresión a los logaritmos de la serie original en el siguiente código.
+
+
+```{r}
+#install.packages("readxl")
+#librerias
+library(readxl)
+library(forecast)
+cbe<-read_excel("cbe.xlsx")
+head(cbe)
+```
+
+```{r}
+#graficos
+plot( main = "serie original", xlab= 'Tiempo', cbe$elec, col= "rosybrown", type='l')
+
+plot( main = "tranformacion exponencial", log(cbe$elec), col = "orange2", type = 'l')
+```
+
+```{r}
+#modelo lineal
+
+#leer columna 3
+Elec.ts <- ts(cbe[,3], start = 1958,freq=12)
+
+#Tiempo tamaño de la longitud de la serie
+Time <- 1:length(Elec.ts)
+#Funcion ciclo
+Imth <- cycle(Elec.ts) # devuelve un vector de enteros que intica la posicion relativa de un ciclo para cada observación en la serie temporal
+Imth
+
+#Ajuste modelo polinomial cuadrático
+Elec.lm <-lm(log(Elec.ts)~ Time + I(Time^2) + factor(Imth))
+
+#factor (Imth) que convierte Imth en una variable categorica para capturar efectos estacionales
+
+# Imprime lo mismo
+#acf(Elec.lm$residuals)
+acf(resid(Elec.lm))
+
+```
+
+El correlograma de los residuos parece tener un ciclo con un período de 12 meses, lo que sugiere que las variables del indicador mensual no son suficientes para dar cuenta de la estacionalidad de la serie.
+
+
+Esto se puede explicar utilizando un modelo no estacionario con un componente estacional estocástico. Mientras tanto, observamos que el modelo ARMA(p, q) que mejor se ajusta se puede elegir utilizando el AIC más pequeño, ya sea probando una variedad de combinaciones de p y q en la función arima o usando un bucle for con límites superiores en p y q tomado como 2 en el código que se muestra a continuación.
+
+
+En cada paso del bucle for, el AIC del modelo ajustado se compara con el valor más pequeño almacenado actualmente. Si se descubre que el modelo es una mejora (es decir, tiene un valor AIC más pequeño), entonces se almacenan el nuevo valor y modelo. Para empezar, best.aic se inicializa hasta el infinito (Inf). Una vez completado el ciclo, el mejor modelo se puede encontrar en best.order y, en este caso, el mejor modelo resulta ser un modelo AR(2).
+
+
+
+```{r}
+# Best order
+# Genera una lista de modelos y elige el mejor
+
+
+best.order <- c(0,0,0)
+best.aic<- Inf
+for (i in 0:2) for (j in 0:2){
+  fit.aic <- AIC(arima(resid(Elec.lm), order=c(i,0,j)))
+  #Compara el aic actual con el anterior
+  if(fit.aic <best.aic){
+    best.order <- c(i,0,j) #AR(i) MA(j)
+    best.arma <- arima(resid(Elec.lm), order = best.order)
+    best.aic <-fit.aic
+  }
+}
+best.order
+```
+
+Electricity production series: correlogram of the residual series of the best-fitting ARMA model.
+```{r}
+# ACF
+acf(resid(best.arma))
+
+```
+Los lags se vuelven a salir cíclicamente (no deberia suceder) *
+
+La función de predict se puede utilizar tanto para pronosticar valores futuros del modelo de regresión ajustado como para pronosticar los errores futuros asociados con el modelo de regresión utilizando el modelo ARMA ajustado a los residuos de la regresión. Luego, estos dos pronósticos se pueden sumar para dar un valor pronosticado del logaritmo para la producción de electricidad, que luego necesitaría ser antirregistrado y quizás ajustado usando un factor de corrección de sesgo.
+
+
+Como predict es una función genérica de R, funciona de diferentes maneras para diferentes objetos y clases de entrada. Para un modelo de regresión ajustado de clase lm, la función de predicción requiere que el nuevo conjunto de datos tenga la forma de un marco de datos (clase de objeto data.frame).
+
+
+Para un modelo ARMA ajustado de clase arima, la función predict requiere solo el número de pasos de tiempo por delante para el pronóstico deseado. En el último caso, predict produce un objeto que tiene tanto los valores predichos como sus errores estándar, que se pueden extraer usando pred y se, respectivamente.
+En el siguiente código, se predice la producción de electricidad para cada mes de los próximos tres años.
+
+
+```{r}
+# New time
+new.time<-seq(length(Elec.ts), length=36)
+new.data<-data.frame(Time=new.time, Imth = rep(1:12,3))
+predict.lm<-predict(Elec.lm, new.data)
+predict.arma<-predict(best.arma, n.ahead=36)
+elec.pred<-ts(exp(predict.lm+predict.arma$pred),start=1991,
+freq=12)
+ts.plot(main = "pronostico a 36 registros" , cbind(Elec.ts,elec.pred), col=c("#6E7B8B","#8B5F65"), lty=1:2)
+```
+
+
+
+
+La gráfica de los valores pronosticados sugiere que los valores pronosticados para el invierno pueden estar subestimados por el modelo ajustado, lo que puede deberse a la autocorrelación estacional restante en los residuos (ver la grafica ACF de los residuos).
+
+
+
+
+# Non-seasonal ARIMA models
+
+### Differencing and the electricity series
+
+```{r}
+#install.packages('tseries')
+library(tseries)
+Elec.ts <- ts(cbe[,3], start = 1958, freq = 12)
+
+#Elimiar la estacionalidad
+plot(Elec.ts, main = 'serie original')
+plot(main= 'serie con una diferncia' ,diff(Elec.ts))
+plot( main = 'serie logaritmo con una diferencia', diff(log(Elec.ts)))
+
+mean(diff(log(Elec.ts)))
+class(Elec.ts)
+
+apply(Elec.ts,2, adf.test)
+
+```
+
+# IMA (1,1)
+```{r}
+Beer.ts <- ts(cbe[,2], start = 1958, freq = 12)
+plot(Beer.ts)
+Beer.ima <- arima(Beer.ts, order = c(0,1,1))
+Beer.ima
+acf(resid(Beer.ima))
+
+```
+
+Notemos que hay ciclos anuelas, lo cual sugiera que se requiere un termino estacional 
+
+
+### Pronostico para la producción del próximo año
+```{r}
+Beer.1991 = predict(Beer.ima, n.ahead = 12)
+Beer.1991
+sum(Beer.1991$pred)
+```
+
+# Ejemplo arima estacional
+```{r}
+# Modelo ARIMA estacional -------------------------------------------------
+ 
+ 
+# Ejemplo Modelo ARI estacional e IMA stacional ---------------------------
+ 
+ 
+AIC (arima(log(Elec.ts), order = c(1,1,0),
+           seas = list(order = c(1,0,0), 12)))
+ 
+AIC (arima(log(Elec.ts), order = c(0,1,1),
+           seas = list(order = c(0,0,1), 12)))
+ 
+ 
+get.best.arima <- function(x.ts, maxord = c(1,1,1,1,1,1))
+{
+  best.aic <- 1e8
+  n <- length(x.ts)
+  for (p in 0:maxord[1]) for(d in 0:maxord[2]) for(q in 0:maxord[3])
+    for (P in 0:maxord[4]) for(D in 0:maxord[5]) for(Q in 0:maxord[6])
+    {
+      fit <- arima(x.ts, order = c(p,d,q),
+                   seas = list(order = c(P,D,Q),
+                               frequency(x.ts)), method = "CSS")
+      fit.aic <- -2 * fit$loglik + (log(n) + 1) * length(fit$coef)
+      if (fit.aic < best.aic)
+      {
+        best.aic <- fit.aic
+        best.fit <- fit
+        best.model <- c(p,d,q,P,D,Q)
+      }
+    }
+  list(best.aic, best.fit, best.model)
+}
+best.arima.elec <- get.best.arima( log(Elec.ts),
+                                     maxord = c(2,2,2,2,2,2))
+best.arima.elec
+best.fit.elec <- best.arima.elec[[2]]
+acf( resid(best.fit.elec) )
+best.arima.elec [[3]]
+ 
+ts.plot( cbind( window(Elec.ts,start = 1981),
+                exp(predict(best.fit.elec,12)$pred) ), lty = 1:2, col = 'yellow2')
+```
+
+## Ajuste mediante autoarima 
+```{r}
+auto.arima(log(Elec.ts))
+model <- auto.arima(log(Elec.ts), trace = T,
+                    stepwise = F,
+                    approximation = F)
+
+model$aic
+
+ts.plot(cbind(window(Elec.ts, start = 1981),
+              exp(predict(model,12)$pred)), col = c('blue', 'red'), lty= 1:2)
+ts.plot(cbind())
+
+
+
+```
+

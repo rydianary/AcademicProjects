@@ -1,0 +1,84 @@
+---
+title: "Forecasting"
+author: "Diana Laura Reyes Youshimatz"
+date: "2024-03-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Instrucciónes:
+
+1. Consultar el libro Time Series Analysis and Its Applications with R examples pp. 99.
+
+2. Complementar este código incluyendo la descripción relevante de ca%da co%digo.
+
+3. documentar cada linea que aparezca en dicho co%digoGenerar un reporte RMD considerando los puntos anteriores y entregar en Blackboard lasalidad del RMD (word o pdf).
+
+
+![Text](/cloud/project/compotamientoarma.png)
+
+
+## Example 3.16 Preliminary Analysis of the Recruitment Series
+
+
+We consider the problem of modeling the Recruitment series (number of new fish) shown in Figure 1.5. There are 453 months of observed recruitment ranging over the years 1950-1987. Recruitment is loosely defined as an indicator of new members of apopulation to the first life stage at which natural mortality stabilizes near adult levels.
+
+```{r}
+library(astsa)
+plot(rec, ylab="", xlab="", main="Recruitment")
+#par(mfrow=c(2,1))
+acf(rec, 48)
+pacf(rec, 48)
+fit=ar.ols(rec,aic=F,order.max=2,demean=F,intercept=T)
+fit # estimates
+fit$asy.se # standard errors
+```
+
+ The ACF has cycles corresponding roughly to a 12-month period, and the PACF has large values for h = 1, 2 and then is essentially zero for higher order lags. 
+ Based on Table 3.1, these results suggest that a second-order (p = 2) autoregressive model might provide a good 
+ 
+ 
+Ahora reproduce el gráfico usando ggplot
+Tenga en cuenta que los ejes de retraso estan en terminos de temporada (12 meses en este caso)
+
+
+```{r}
+# Calcula y traza la función de autocorrelación (ACF) para la serie temporal 'rec' con un retraso máximo de 48 períodos.
+acf(rec, 48)
+# Calcula y traza la función de autocorrelación parcial (PACF) para la serie temporal 'rec' con un retraso máximo de 48 períodos.
+
+
+# Ajusta un modelo autorregresivo (AR) de orden máximo 2 a la serie temporal 'rec' utilizando el método de mínimos cuadrados ordinarios (OLS).
+# Parámetros:
+#   rec: Serie temporal a modelar.
+#   aic: Indica si se debe utilizar el criterio de información de Akaike (AIC) para la selección de modelos. En este caso, se establece en FALSE para no utilizarlo.
+#   order.max: Orden máximo del modelo AR a ajustar. En este caso, se establece en 2.
+#   demean: Indica si se debe restar la media de la serie temporal antes de ajustar el modelo. En este caso, se establece en FALSE para no restar la media.
+#   intercept: Indica si se debe incluir un término de intercepción en el modelo. En este caso, se establece en TRUE para incluirlo.
+pacf(rec, 48)
+
+fit=ar.ols(rec,aic=F,order.max=2,demean=F,intercept=T)
+# Muestra los estimados de los parámetros del modelo ajustado
+fit # estimates
+
+ # Muestra los errores estándar asintóticos de los estimados de los parámetros del modelo ajustado.
+fit$asy.se # standard errors
+```
+
+## Ahead prediction
+```{r}
+# Ajusta un modelo autorregresivo (AR) de orden 2 a la serie temporal 'rec' utilizando el método de mínimos cuadrados ordinarios (OLS).
+# Parámetros:
+#   rec: Serie temporal a modelar.
+#   order: Orden del modelo AR a ajustar. En este caso, se establece en 2.
+#   demean: Indica si se debe restar la media de la serie temporal antes de ajustar el modelo. En este caso, se establece en FALSE para no restar la media.
+#   intercept: Indica si se debe incluir un término de intercepción en el modelo. En este caso, se establece en TRUE para incluirlo.
+
+regr = ar.ols(rec, order=2, demean=FALSE, intercept=TRUE)
+regr
+```
+
+backcasting

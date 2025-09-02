@@ -1,0 +1,277 @@
+---
+title: "Actividad 12"
+author: " Silvia Alejandra García García 170535 - Diana Laura Reyes Youshimatz 173391"
+date: "2024-03-11"
+output:
+  html_document: default
+  word_document: default
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Instrucciónes:
+
+1. Consultar el libro Time Series Analysis and Its Applications with R examples pp. 99.
+
+2. Complementar este código incluyendo la descripción relevante de ca%da co%digo.
+
+3. documentar cada linea que aparezca en dicho co%digoGenerar un reporte RMD considerando los puntos anteriores y entregar en Blackboard lasalidad del RMD (word o pdf).
+
+
+![Text](/cloud/project/compotamientoarma.png)
+
+# Preliminary Analysis of the Recruitment Series
+
+## Descripción de la base de datos
+  
+Recruitment (index of the number of new fish) for a period of 453 months ranging over theyears 1950-1987. Recruitment is loosely defined as an indicator of new members of apopulation to the first life stage at which natural mortality stabilizes near adult levels.
+
+```{r}
+library(astsa)
+## Warning: package 'astsa' was built under R version 4.3.2
+
+ # Se grafica el conjunto de datos 'rec'
+plot(rec, ylab="", xlab="", main="Recruitment")
+
+# Se calculan y grafican la función de autocorrelación (ACF) y la función de autocorrelación parcial (PACF) hasta un rezago de 48
+acf2(rec, 48)
+
+# ajustar un modelo de autorregresión (AR) a una serie temporal mediante el método de mínimos cuadrados ordinarios
+(regr = ar.ols(rec, order=2, demean=FALSE, intercept=TRUE))
+
+# # Muestra los errores estándar de los coeficientes estimados del modelo
+regr$asy.se.coef # standard errors of the estimates
+# will produce values and a graphic of the ACF and PACF
+```
+
+El ejemplo que estamos análizando es  el problema de modelar la serie de reclutamiento. La ACF y la PACF podemos observar que son consistentes con el comportammiento del modelo AR(2).  
+
+Hemos realizado una regresión utilizando los conjuntos de datos triples
+${(x; z_1, z_2) : (x_3; x_2, x_1),(x_4; x_3, x_2), . . . ,(x_{453}; x_{452}, x_{451})}$ para ajustar un modelo de la forma
+$x_t = φ_0 + φ_1x_{t−1} + φ_2x_{t−2} + w_t$
+
+para $t = 3, 4, . . . , 453$
+
+Del ACF podemos observar sus ciclos son aproximadanmente de 12 meses y del PACF observamos valores significantes en h=1,2.
+Estos resultados sugieren que este modelo autoregresivo de segundo orden es adecuado.
+
+La PACF para modelos MA se comporta muy parecido a la ACF para modelos AR. Además, la PACF para modelos AR se comporta mucho como la ACF para modelos MA. Debido a que un modelo ARMA invertible tiene una representación infinita AR, la PACF no se cortará.
+
+Estos resultados sugieren que un modelo autorregresivo de segundo orden (p = 2) podría proporcionar un buen ajuste.
+
+
+Ahora reproduce el gráfico usando ggplot
+
+```{r}
+# Ajusta un modelo autorregresivo de orden 2mediante el método de mínimos cuadrados ordinarios
+regr = ar.ols(rec, order=2, demean=FALSE, intercept=TRUE)
+regr
+```
+
+
+```{r}
+# library(astsa)
+# library(ggplot2)
+# 
+# # Ajustar el modelo AR(2)
+# regr <- ar.ols(rec, order = 2, demean = FALSE, intercept = TRUE)
+# 
+# # Extraer los residuos del modelo
+# residuos <- residuals(regr)
+# 
+# # Crear un dataframe con los residuos y sus índices correspondientes
+# datos <- data.frame(Index = 1:length(residuos), Residuos = residuos)
+# 
+# # Graficar los residuos utilizando ggplot2
+# ggplot(data = datos, aes(x = Index, y = Residuos)) +
+#   geom_line() +
+#   labs(x = "Índice", y = "Residuos") +
+#   ggtitle("Gráfico de Residuos del Modelo AR(2)") +
+#   theme_minimal()
+
+
+```
+
+
+Observamos que para t=3, 4, ..., 453, el valor de los estimadores fueron:
+$$\hat\phi_0=6.74_{1.11},\  \hat\phi_1=1.35,\\  \hat\phi_2=-0.46\ y\  \hat\phi^2_w=89.72$$  
+En donde los errores estándar estimados de $\phi_{1}\ y\ \phi_{2}\ es\ (.04)$
+
+Podemos observar  que nuestro modelos tiene la forma.
+
+$x^n_{n+m}=6.737+1.3541x^n_{n+m-1}-0.4632^n_{n+m-2}$
+
+## Forecasting
+
+Tenga en cuenta que los ejes de retraso estan en terminos de temporada (12 meses en estecaso)
+
+
+En la predicción forecasting, el objetivo es predecir los valores futuros de una serie temporal, $x_{n+m}$,$ m = 1, 2, . . .$, basados en los datos recopilados hasta el presente, $x = {x_n, x_{n−1}, . . . , x_1}$.
+A lo largo de esta sección, supondremos que $x_t$ es estacionaria y que los parámetros del modelo son conocidos.
+
+El problema de la predicción cuando los parámetros del modelo son desconocidos se discutirá en la próxima sección; además. El predictor de error cuadrático medio mínimo de $x_{n+m}$ es
+$x^n_{n+m} = E(x_{n+m}| x)$
+
+```{r}
+regr = ar.ols(rec, order=2, demean=FALSE, intercept=TRUE)
+ # Realiza pronósticos utilizando el modelo ajustado para 24 períodos hacia adelante
+fore = predict (regr, n.ahead=24)
+# Grafica la serie temporal 'rec' y los pronósticos
+ts.plot(rec, fore$pred, col=1:2, xlim=c(1980, 1990), ylab="Recruitment")
+# Calcula los límites superior e inferior de la predicción
+U = fore$pred+fore$se; L = fore$pred-fore$se
+# Crea las coordenadas para graficar el intervalo de confianza
+xx = c(time (U), rev(time (U))); yy = c(L, rev(U))
+# Dibuja un polígono sombreado que representa el intervalo de confianza
+polygon (xx, yy, border = 8, col = gray(.6, alpha = .2))
+# Grafica la línea de pronóstico
+lines (fore$pred, type="p", col=2)
+```
+vamos a restringir nuestra atención a predictores que son funciones lineales de los datos, es decir, predictores de la forma
+$x^n_{n+m} = α_0 + Σ^n_{k=1} α_kx_k$
+
+donde α0, α1, . . . , αn son números reales. Estos predictores lineales  que minimizan el error cuadrático medio de predicción se llaman mejores predictores lineales (BLPs, por sus siglas en inglés). Como veremos, la predicción lineal depende solo de los momentos de segundo orden del proceso, los cuales son fáciles de estimar a partir de los datos. 
+
+## Backcasting
+
+El término "backcasting" dá referencia a la predicción hacia atrás en el tiempo utilizando datos observados con anterioridad.
+
+En este casp asumimos que los modelos ARMA son gaussianos, también tenemos que la predicción de error cuadrático mínimo hacia atrás en el tiempo es igual a la predicción hacia adelante en el tiempo para modelos ARMA.Por lo tanto, el proceso puede generarse de manera equivalente mediante el modelo hacia atrás:
+
+$$x_t=\phi x_{t+1} + \theta v_{t+1} + v_t$$
+  
+Dado el conjunto de datos ${x_1, . . . ., x_n}$, truncamos $v^n_{n}=E(v_{n} | x_1, . . . ., x_n)$ para que sea cero y luego iteramos hacia atrás. 
+En si buscamos iniciar tener como aproximación incial $\tilde v^n_{n} = 0$  para general errores hacia atrás de la forma:
+
+
+$$\tilde v^n_{t} = x_t - \phi x_{t+1} - \theta \tilde v^n_{t}$$
+
+para t = (n - 1), (n - 2), . . . , 1.  
+
+Después,  
+$$\tilde x^n_{0}=\phi x_1 - \theta \tilde v^n_{1}+v^n_{0}=\phi x_1 - \theta \tilde v^n_{1}$$  
+  
+Debido a que $\tilde v^n_{t}=0$ para todo $t\leq 0$. De forma generalizada tenemos:  
+$$\tilde x^n_{1-m}=\phi \tilde x^n_{2-m}$$
+para m=2, 3, ...
+
+
+Para poder poner todo este proceso en R, usamos el ejemplo pasado.
+
+Primero simulanos una serie de tiempo utilizando un modelo ARMA(1,1) con un modelo ARIMA. En donde tenemos AR(1) con  coeficiente 0.9, y un MA(1) con  coeficiente 0.5.  
+  
+```{r}
+set.seed(90210)
+x = arima.sim(list(order = c(1,0,1), ar = .9, ma = .5), n = 100)
+```
+
+Invertimos el orden de las observaciones de x para ajustar un modelo ARIMA al conjunto previamente invertido y realizamos una prediccion de 10 pasos hacia adelante.  
+  
+```{r}
+xr = rev(x)
+pxr = predict(arima(xr, order = c(1,0,1)), 10)
+```
+
+Al tener las predicciones buscaremos invertir los datos al igual que los errores estándar de las predicciones.
+
+```{r}
+pxrp = rev(pxr$pred)
+pxrse = rev(pxr$se)
+```
+  
+Ahora creamos una nueva serie de tiempo conectando las predicciones invertidas (pxrp) con la serie original (x). Y la graficamos. 
+Podemos observar que la serie comienxa en el índice -9.
+  
+```{r}
+nx = ts(c(pxrp, x), start = -9)
+plot(nx, ylab = expression(X[~t]), main = "Backcasting")
+U = nx[1:10] + pxrse; L = nx[1:10]-pxrse
+xx = c(-9:0, 0:-9); yy = c(L, rev(U))
+polygon(xx, yy, border = 8, col = gray(0.6, alpha = 0.2))
+lines(-9:0, nx[1:10], col = 2, type = 'o')
+abline(v = -9, col = "seagreen", lty = 2)
+```
+  
+Los detalles agregados fueron para calcular los limites superior e inferior para un intervalo de confianza utilizando los errores estándar invertidos. Al igual creamos coordenadas para dibujar un polígono que representa el intervalo de confianza.
+El área sombreada representa el intervalo de confianza.
+  
+  
+# Ejemplo 3.28 Yule walker estimation.  
+  
+Para el proceso de estimación asumimos que tenemos n observaciones $x_1, . . . , x_n$de un proceso ARMA(p, q) gaussiano causal e invertible, en el cual, inicialmente, los parámetros de orden, (p) y (q), son conocidos. Nuestro objetivo es estimar los parámetros, $\phi_1, . . . , \phi_p, \theta_1, . . . , \theta_q$, y $\sigma^2_w$.
+La idea principal para este proceso es igualar los momentos poblacionales con los momentos de la muestra y luego resolver para los parámetros en términos de los momentos de la muestra.
+
+La ecuación Yule walker está dado por:
+$$\gamma(h)=\phi_1\gamma(h-1)+...+\phi_p\gamma(h-p)\\ \sigma^2_w=\gamma(0)-\phi_1\gamma(1)-...-\phi_p\gamma(p)$$
+para h=1, 2, ..., p
+
+
+Estos estimadores se conocen comúnmente como los estimadores de Yule-Walker. Para fines de cálculo, a veces es más conveniente trabajar con la ACF de la muestra. Normalmente se escrben de la forma:
+$$\hat\phi=\hat{R_p}^{-1}\hat \rho_p,\ \hat\sigma^2=\hat\gamma(0)[1-\hat \rho'_p\hat{R_p}^{-1}\hat \rho_p]$$
+en donde $\hat R_{p} = \{\hat\rho\ (k-j)\}^p_{j,k=1}$ es una matriz y $\hat\rho_p=(\hat\rho(1), ...,\hat\rho(1p))'$ es un vector px1
+
+Para mayor entendimiento a la esyimación Yule walker, veremos un ejemplo:
+
+Primero buscamos ajustar un modelos a la serie de tiempo rec, el cual tiene un orden 2. De igual forma observaremos la media, la varianza y el AR estimadios de la serie según el modelo Yule-Walker.
+
+
+```{r}
+rec.yw = ar.yw(rec, order = 2)
+rec.yw$x.mean
+rec.yw$ar
+rec.yw$var.pred
+```
+Para obtener las predicciones a 24 meses vista y sus errores estándar.
+  
+Realizamos una predicción hacia adelante de 24 pasos utilizando el modelo Yule-Walker y lo graficamos.
+
+```{r}
+rec.pr = predict(rec.yw, n.ahead = 24)
+U = rec.pr$pred + rec.pr$se
+L = rec.pr$pred - rec.pr$se
+minx = min(rec,L); maxx = max(rec,U)
+
+ts.plot(rec, rec.pr$pred, xlim=c(1980,1990), ylim=c(minx,maxx))
+lines(rec.pr$pred, col="red", type="o")
+lines(U, col="purple", lty="dashed")
+lines(L, col="seagreen", lty="dashed")
+```
+
+Podemos observar en la gráfica una línea punteada morada que representa el intervalo superior de confianza para las predicciones, y la línea punteada verde presenta el intervalo inferior de confianza para las predicciones.
+
+Los estimadores de Yule-Walker son óptimos en el sentido de que la distribución asintótica es la mejor distribución normal asintótica. Sin embargo, si utilizamos el método de momentos para modelos MA o ARMA, no obtendremos estimadores óptimos debido a que dichos procesos son no lineales en los parámetros.
+
+## Maximum Likelihood and Least Squares Estimation
+
+Hasta ahora, hemos ajustado un modelo AR(2) a la serie de reclutamiento utilizando mínimos cuadrados ordinarios y utilizando Yule-Walker. Ahora ajustaremos el modelo mediante estimación de máxima verosimilitud (MLE) a la serie de reclutamiento.
+
+Primero ajustamos el modelo utilizando el método de máxima verosimilitud (MLE) a la serie de tiempo.
+
+```{r}
+rec.mle = ar.mle(rec, order = 2)
+```
+
+Ahora calculamos la media estimada, la varianza de la serie de tiempo rec, según el modelo ajustado previamente
+
+```{r}
+rec.mle$x.mean
+rec.mle$var.pred
+```
+Al igual calculamos la raíz cuadrada de la diagonal de la matriz de varianzas asintóticas de los coeficientes estimados para darnos una idea de la precisión de nuestras estimaciones de los coeficientes en un modelo ARMA.
+  
+```{r}
+sqrt(diag(rec.mle$asy.var.coef))
+```
+
+
+Los coeficientes AR estimados por el modelos son:
+```{r}
+rec.mle$ar
+```
+
+
+los resultados obtenidos los podemos comparar con los resultados de los anteriores métodos.
+

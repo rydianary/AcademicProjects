@@ -1,0 +1,138 @@
+---
+title: "Actividad 11"
+author: "Diana Laura Reyes Youshimatz"
+date: "2024-03-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#ARMA(1,1)
+```{r}
+# Load necessary libraries
+library(stats)
+
+# Set seed for reproducibility
+set.seed(001)
+
+# Define AR and MA coefficients
+phi <- c(0.6)
+theta <- c(0.3)
+
+# Simulate data from an ARMA process
+arma_data <- arima.sim(n = 100, model = list(ar = phi, ma = theta))
+
+# Plot the simulated ACF and PACF
+ACF = ARMAacf(ar=phi, ma=theta,15)
+#ACF
+plot(ACF, type="h",main="ACF", xlab="lag", ylim=c(-.8,1)); abline(h=0)
+
+PACF = ARMAacf(ar=0, ma=c(0.8), 24, pacf=TRUE)
+#PACF
+plot(PACF, type="h", main="PACF", xlab="lag", ylim=c(-.8,1)); abline(h=0)
+
+
+```
+
+#ARMA(2,1)
+```{r}
+# Load necessary libraries
+library(stats)
+
+# Set seed for reproducibility
+set.seed(001)
+
+# Define AR and MA coefficients
+phi <- c(0.6,-0.4)
+theta <- c(0.3)
+
+# Simulate data from an ARMA process
+arma_data <- arima.sim(n = 100, model = list(ar = phi, ma = theta))
+
+# Plot the simulated ACF and PACF
+ACF = ARMAacf(ar=phi, ma=theta,3)
+#ACF
+plot(ACF, type="h",main="ACF", xlab="lag", ylim=c(-.8,1)); abline(h=0)
+
+PACF = ARMAacf(ar=0, ma=c(0.8), 24, pacf=TRUE)
+#PACF
+par(mfrow=c(1,2))
+plot(PACF, type="h", main="PACF", xlab="lag", ylim=c(-.8,1)); abline(h=0)
+```
+
+
+#ARMA(1,2)
+```{r}
+# Set seed for reproducibility
+set.seed(001)
+
+# Define AR and MA coefficients
+phi <- c(0.6)
+theta <- c(0.3,-0.2)
+
+# Simulate data from an ARMA process
+arma_data <- arima.sim(n = 100, model = list(ar = phi, ma = theta))
+
+# Plot the simulated ACF and PACF
+ACF = ARMAacf(ar=phi, ma=theta)
+#ACF
+plot(ACF, type="h",main="ACF", xlab="lag", ylim=c(-.8,1)); abline(h=0)
+
+PACF = ARMAacf(ar=0, ma=c(0.8), 24, pacf=TRUE)
+#PACF
+plot(PACF, type="h", main="PACF", xlab="lag", ylim=c(-.8,1)); abline(h=0)
+```
+
+#ARMA(3,1)
+```{r}
+## Modelos ARMA(3,1)
+set.seed(001)
+
+#X_t+0.2X_{t-1}-0.3X_{t-2}+0.1X_{t-3}=w_{t}+0.7w_{t-1}
+
+ARMA4 <- arima.sim(list(order=c(3, 0, 1), ar=c(0.2,-0.3,0.1), 
+                        ma=c(0.7)), n=150)
+plot(ARMA4, ylab='x')
+acf(ARMA4,lag.max = 100)
+pacf(ARMA4,ylim=c(-1,1))
+pacf(ARMA4,ylim=c(-1,1),plot=FALSE)
+
+```
+
+#ARMA(2,3)
+```{r}
+## Modelos ARMA(2,3)
+set.seed(001)
+
+
+#X_{t}+0.7X_{t-1}-0.1X_{t-2}=w_t+0.2w_{t-1}-0.3w_{t-2}+0.1w_{t-3}
+
+ARMA5 <- arima.sim(list(order=c(2, 0, 3), ar=c(0.7,-0.1), 
+                        ma=c(0.2,-0.3,0.1)), n=150)
+plot(ARMA5, ylab='x')
+acf(ARMA5,lag.max = 100)
+pacf(ARMA5,ylim=c(-1,1))
+pacf(ARMA5,ylim=c(-1,1),plot=FALSE)
+
+
+```
+
+#ARMA(2,2)
+```{r}
+#Modelos ARMA(2,2)
+set.seed(001)
+
+
+#X_{t}+0.4X_{t-1}-0.2X_{t-2}=w_t+0.6w_{t-1}-0.3w_{t-2}
+
+ARMA6 <- arima.sim(list(order=c(2, 0, 2), ar=c(0.4,-0.2), 
+                        ma=c(0.6,-0.3)), n=150)
+plot(ARMA6, ylab='x')
+acf(ARMA6,lag.max = 100)
+pacf(ARMA6,ylim=c(-1,1))
+pacf(ARMA6,ylim=c(-1,1),plot=FALSE)
+```
+

@@ -1,0 +1,48 @@
+---
+title: "Actividad 2"
+author: "Diana Laura Reyes Youshimatz"
+date: "2024-01-15"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# declaracion de variables ------------------------------------------------
+
+#graficar el resultado del experimento 100 veces
+#semilla aleatoria
+set.seed(15)
+#parámetros del experimento
+n<-100
+p<- 0.5
+x<- 1:n
+#generar datos de ruido binario
+y<-sample(c(-1,1),n, replace = TRUE, prob = c(p,1-p))
+#dividir la ventana gráfica en 1 fila y 2 columnas
+par(mfrow = c(1, 2))
+
+
+
+# Graficar el ruido binario en el lado izquierdo
+plot(x, y, type = "o", main = "Ruido Binario", ylim = c(-1.2, 1.2))
+abline(h = 0, col = "gray")  # Línea en y=0
+
+# Calcular la media del ruido binario y agregar una línea
+meany <- mean(y)
+abline(h = meany, col = "red", lty = 2) #media del ruido
+
+# Graficar la caminata aleatoria en el lado derecho
+x0 <- 0
+z <- c(x0, y)
+caminata <- cumsum(z)
+plot(caminata, type = "l", main = "Caminata Aleatoria")
+
+# Restaurar la configuración de ventana gráfica a la normal
+par(mfrow = c(1, 1))
+
+
+```
+

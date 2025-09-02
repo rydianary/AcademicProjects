@@ -1,0 +1,272 @@
+---
+title: "Actividad 16"
+author: "Diana Laura Reyes Youshimatz - Silvia Alejandra García García"
+date: "2024-04-11"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## Introducción
+Para llevar a cabo modelos ARMA o ARIMA debemos garantizar 
+ estacionariedad en la serie. 
+
+Para determinar estacionariedad usamos la prueba de Dickey Fuller
+Para determinar ruido blanco usamos la prueba de Ljung Box Test
+Recordemos que ruido blanco significa que el error: 
+- Media = 0
+- Varianza constante
+- No serialmente correlacionada
+
+## Librerias
+```{r}
+
+# Instalar librerías
+#install.packages(c("lubridate", "tseries", "tidyverse", "car", "astsa", "foreign", "timsac", "vars", "lmtest", "mFilter", "dynlm", "nlme", "broom", "kableExtra", "knitr", "MASS", "parallel", "mlogit", "dplyr", "tidyr", "forecast", "fpp2", "quantmod"))
+
+
+#install.packages('broom')
+#install.packages("broom", type="binary")
+
+#Cargar librerias
+library(lubridate)
+library(tseries)
+library(lubridate)
+library(tidyverse)
+library(car)
+library(astsa)
+library(foreign)
+library(timsac)
+library(vars)
+library(lmtest)
+library(mFilter)
+library(dynlm)
+library(nlme)
+library(lmtest)
+library(broom)
+library(kableExtra)
+library(knitr)
+library(MASS)
+library(parallel)
+library(car)
+library(mlogit)
+library(dplyr)
+library(tidyr)
+library(forecast)
+library(fpp2)
+library(stats)
+library(quantmod)
+```
+
+## Base de datos
+
+La base de datos es un contexto histórico de los precios del petróleo de la Secretaría de Energia de Enero 2013 - Marzo 2020
+```{r}
+library(readxl)
+Arimar <- read_excel("Arimar.xlsx")
+attach(Arimar)
+names(Arimar)
+
+#Series de Tiempo Univariadas 
+
+#Paso 1. Convertir a objeto de Serie de Tiempo en R
+
+Arimar.ts=ts(Arimar, start=c(2013,1), frequency = 12)
+
+print(Arimar.ts)
+
+class(Arimar.ts)
+
+start(Arimar.ts)
+end(Arimar.ts)
+
+plot(Arimar.ts,  main="Serie de tiempo", ylab="Precio", col="red")
+
+serielog=log(Arimar.ts)
+serielog
+plot(serielog,main= 'serie de tiempo con logaritmo', col = 'orange')
+```
+En primera instancia podemos observar que no existe una tendencia que pueda describir toda la serie de tiempo, dado que fluctua, y podemos vaticinar que esta serie no es estacionaria. 
+
+Tras aplicar la transformación logarítmica podemos observar que que la serie de tiempo no tiene muchos cambios por tanto, es muy posible que no sea estacionaria aún con esta transformación. 
+
+
+## Prueba de Dickey-Fuller
+
+La prueba de Dickey-Fuller es una técnica estadística utilizada para determinar si una serie temporal es estacionaria o no estacionaria. La estacionariedad es una propiedad deseable en las series temporales, ya que implica que las propiedades estadísticas de la serie, como la media y la varianza, son constantes a lo largo del tiempo. La prueba de Dickey-Fuller se basa en la siguiente regresión:
+
+\[
+\Delta y_t = \alpha + \beta t + \gamma y_{t-1} + \delta_1 \Delta y_{t-1} + \dots + \delta_{p-1} \Delta y_{t-(p-1)} + \varepsilon_t
+\]
+
+Donde:
+- \(y_t\) es la serie temporal en el tiempo \(t\).
+- \(\Delta\) es el operador de diferencia que calcula la diferencia entre dos observaciones consecutivas.
+- \(\alpha\) es la constante.
+- \(\beta\) es el coeficiente de tendencia temporal.
+- \(\gamma\) mide el grado de persistencia en la serie.
+- \(\delta_i\) son los coeficientes de las diferencias rezagadas.
+- \(\varepsilon_t\) es el término de error.
+
+#### Planteamiento de hipótesis:
+
+La prueba de Dickey-Fuller evalúa la hipótesis nula de que una serie temporal tiene una raíz unitaria, lo que indica la presencia de raíces unitarias y, por lo tanto, no es estacionaria. Formalmente:
+
+- **Hipótesis nula (\(H_0\)):** La serie temporal tiene una raíz unitaria, es decir, no es estacionaria.
+- **Hipótesis alternativa (\(H_1\)):** La serie temporal no tiene una raíz unitaria, es decir, es estacionaria.
+
+#### Interpretación:
+
+- Si el valor p resultante es menor que un nivel de significancia dado (generalmente 0.05), rechazamos la hipótesis nula y concluimos que la serie temporal es estacionaria.
+- Si el valor p es mayor que el nivel de significancia, no podemos rechazar la hipótesis nula, lo que sugiere que la serie temporal es no estacionaria.
+
+#### Función en R:
+
+En R utilizamos la función `adf.test()` del paquete `tseries` para realizar la prueba de Dickey Fuller. 
+
+A continuación aplicamos la prueba de Dickey Fuller para probar estacionariedad:
+
+```{r}
+#Estacionariedad: Para conocer el número de diferencias que se requieren para lograr que la serie 
+#sea estacionaria
+
+#ndiffs(Arimar.ts)
+
+#Paso 2.Prueba de DickeyFuller
+
+adf.test(Arimar.ts)
+
+```
+Dado que el pvalor es mayor a 0.05, podemos aseverar que esta no es estacionaria. Por tanto utilizaremos diferencias para alcanzar estacionariedad
+
+
+## Test de Ljung-Box
+
+El test de Ljung-Box es una prueba estadística utilizada para evaluar si hay autocorrelación en una serie temporal. La autocorrelación es la correlación de una serie consigo misma en diferentes intervalos de tiempo. Este test se basa en la siguiente estadística de prueba:
+
+\[
+Q = n(n+2) \sum_{k=1}^{h} \frac{\hat{\rho}_k^2}{n-k}
+\]
+
+Donde:
+- \(Q\) es la estadística de prueba.
+- \(n\) es el tamaño de la muestra.
+- \(\hat{\rho}_k\) es el coeficiente de autocorrelación en el retraso \(k\).
+- \(h\) es el número de retrasos considerados.
+
+#### Planteamiento de hipótesis:
+
+La prueba de Ljung-Box evalúa la hipótesis nula de que no hay autocorrelación en los primeros \(h\) retrasos de la serie temporal. Formalmente:
+
+- **Hipótesis nula (\(H_0\)):** No hay autocorrelación en los primeros \(h\) retrasos.
+- **Hipótesis alternativa (\(H_1\)):** Hay autocorrelación en al menos uno de los primeros \(h\) retrasos.
+
+#### Interpretación:
+
+- Si el valor p resultante es menor que un nivel de significancia dado (generalmente 0.05), rechazamos la hipótesis nula y concluimos que hay autocorrelación en la serie temporal
+
+- Si el valor p es mayor que el nivel de significancia, no podemos rechazar la hipótesis nula, lo que sugiere que no hay suficiente evidencia para concluir que existe autocorrelación en la serie temporal.
+
+#### Función en R:
+
+En R, puedes utilizar la función `Box.test()` para realizar el test de Ljung-Box.
+
+### Determinar Estacionariedad con una diferencia
+
+
+```{r}
+
+seriedif=diff(Arimar.ts)
+plot(seriedif, main = 'serie con una diferencia', col = 'purple3')
+acf(seriedif)
+
+ndiffs(seriedif)
+adf.test(seriedif)
+
+```
+Al aplicar una diferencia, podemos observar que los datos en la gráfica de la serie que ahora sí parece haber estacionaridad. Sin embargo, de nuevo la Prueba Diceky Fuller al tener un pvalor mayor a 0.05, se muestra que aún no logramos la estacionaridad con una diferencia. 
+
+### Estacionariedad
+### Determinar Estacionariedad con dos diferencias
+
+Ahora probamos con dos diferencias:
+```{r}
+#Prueba de Dickey Fuller con dos diferencias
+
+
+seriedif2=diff(Arimar.ts, differences =2)
+plot(seriedif2, col = 'purple4')
+adf.test(seriedif2)
+
+```
+Visualmente esta serie con dos diferencias ya parece tener estacionariedad dado que los errores sí están alrededor del 0 y al probar con Dickey Fuller test, nuestro p valor es significativo y por tanto podemos concluir que nuestra serie es estacionaria.
+
+## Modelo ARIMA 
+
+Dado que con dos diferencias, ya tenemos estacionariedad, ya podemos establecer un modelo ARIMA. A continuación ahora tenemos que analizar la función de autocorrelación y función de autocorrelación parcial. Esto nos sirve para determinar cuántas medias moviles y autoregresivos vamos a utilizar en nuestro modelo ARIMA.
+
+```{r}
+#Paso 4: Analisis visual de las graficas
+
+
+plot(seriedif2, type="o", lty="dashed",main="Serie de Tiempo",col="red")
+par(mfrow=c(1,2), mar=c(2,2,4,1)+.1)
+acf(seriedif2)
+pacf(seriedif2)
+acf(ts(seriedif2, frequency=1))
+pacf(ts(seriedif2, frequency=1))
+
+```
+La función de autocorrelación         (la primera)
+nos dice el número de medias móviles. Podemos observar que hay dos rezagos, pero uno de ellos puede ser no significativo. 
+
+La función de autocorrelación parcial (la segunda)
+nos dice el número de autoregresivos
+
+## Construcción modelo ARIMA
+Para desarrollar un modelo parsimonioso, primero desarrollamos un modelo ARIMA(1,2,1), es decir un autoregresivo, dos diferencias y una media movil con la serie de tiempo original
+
+```{r}
+
+
+#Modelo Arima
+
+modelo1=arima(Arimar.ts,order=c(1,2,1))
+summary(modelo1)
+
+```
+Con la función arima hemos obtenido el modelo con los coeficientes $\phi$ = 0.4173 $\theta$ = -1
+
+
+```{r}
+# Paso 5: Diagnóstico del modelo
+
+par(mfrow=c(2,2), mar=c(2,2,2,2)+.1)
+
+
+# Reducir los márgenes inferiores
+tsdiag(modelo1)
+
+Box.test(residuals(modelo1),type="Ljung-Box")
+
+error=residuals(modelo1)
+plot(error)
+
+```
+Los errores estandarizados deben asemejarse al ruido blanco para garantizar un buen ajuste y Ljung Box Test nos ayuda a revisar si hay ruido blanco. La gráfica de este test nos muestra que los pvalores estan por encima por la linea de pvalue = 0.05 lo cual parece mostrar que sí hay ruido blanco. Y en consola con `Box.test(residuals(modelo1),type="Ljung-Box")` al obtener un pvalue mayor a 0.05 entonces existe ruido blanco y nuestro modelo tiene buen ajuste, dado que no hay correlación significativa. 
+
+Finalmente podemos observar en la gráfica que los errores rondan alrededor del 0. 
+
+## Pronósticos Arima
+
+Pronóstico para los siguientes 10 meses: 
+```{r}
+
+
+#Pronosticos Arima
+pronostico=forecast::forecast(modelo1,h=10)
+pronostico
+plot(pronostico)
+```
+
+Obtenemos un pronóstico del precio del petroleo abril 2020 hasta enero 2021 con sus respetivcos intervalos de confianza por cada mes con un 95% de confianza. Observamos que el pronóstico del precio del petróleo tiene una tendencia a disminuir. 
